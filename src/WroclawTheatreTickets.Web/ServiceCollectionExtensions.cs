@@ -87,6 +87,9 @@ public static class ServiceCollectionExtensions
             options.AddPolicy("ModeratorOrAdmin", policy => policy.RequireRole("Moderator", "Admin"));
         });
 
+        // Rate Limiting
+        services.AddRateLimitingPolicies();
+
         // Swagger
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(options =>

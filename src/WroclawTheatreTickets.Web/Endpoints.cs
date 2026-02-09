@@ -15,8 +15,10 @@ public static class Endpoints
 {
     public static void RegisterEndpoints(WebApplication app)
     {
-        // Show endpoints
-        var showGroup = app.MapGroup("/api/shows").WithName("Shows");
+        // Show endpoints (public)
+        var showGroup = app.MapGroup("/api/shows")
+            .WithName("Shows")
+            .RequireRateLimiting(RateLimitingConfiguration.PublicEndpointsPolicy);
 
         showGroup.MapGet("/", GetAllShows)
             .WithName("GetAllShows")
@@ -42,8 +44,10 @@ public static class Endpoints
             .WithName("GetMostViewed")
             .Produces<IEnumerable<ShowDto>>();
 
-        // Auth endpoints
-        var authGroup = app.MapGroup("/api/auth").WithName("Auth");
+        // Auth endpoints (public - no authentication required but rate limited by IP)
+        var authGroup = app.MapGroup("/api/auth")
+            .WithName("Auth")
+            .RequireRateLimiting(RateLimitingConfiguration.PublicEndpointsPolicy);
 
         authGroup.MapPost("/register", Register)
             .WithName("Register")
@@ -60,8 +64,11 @@ public static class Endpoints
             .AllowAnonymous()
             .Produces<AuthenticationResponse>();
 
-        // Favorites endpoints
-        var favGroup = app.MapGroup("/api/favorites").WithName("Favorites").RequireAuthorization();
+        // Favorites endpoints (authenticated)
+        var favGroup = app.MapGroup("/api/favorites")
+            .WithName("Favorites")
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingConfiguration.AuthenticatedEndpointsPolicy);
 
         favGroup.MapGet("/", GetUserFavorites)
             .WithName("GetUserFavorites")
@@ -73,8 +80,10 @@ public static class Endpoints
         favGroup.MapDelete("/{showId}", RemoveFavorite)
             .WithName("RemoveFavorite");
 
-        // Review endpoints
-        var reviewGroup = app.MapGroup("/api/reviews").WithName("Reviews");
+        // Review endpoints (authenticated)
+        var reviewGroup = app.MapGroup("/api/reviews")
+            .WithName("Reviews")
+            .RequireRateLimiting(RateLimitingConfiguration.AuthenticatedEndpointsPolicy);
 
         reviewGroup.MapPost("/", CreateReview)
             .WithName("CreateReview")
@@ -82,7 +91,10 @@ public static class Endpoints
             .Produces<ReviewDto>();
 
         // Admin endpoints
-        var adminGroup = app.MapGroup("/api/admin").WithName("Admin").RequireAuthorization("AdminOnly");
+        var adminGroup = app.MapGroup("/api/admin")
+            .WithName("Admin")
+            .RequireAuthorization("AdminOnly")
+            .RequireRateLimiting(RateLimitingConfiguration.AdminEndpointsPolicy);
 
         adminGroup.MapPost("/reviews/{reviewId}/approve", ApproveReview)
             .WithName("ApproveReview");

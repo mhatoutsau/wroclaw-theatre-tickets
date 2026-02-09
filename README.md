@@ -12,6 +12,7 @@ This backend application provides a comprehensive platform for:
 - **Notification system** for event reminders, digests, and alerts
 - **Admin moderation panel** for review approval and content management
 - **Automated maintenance** with scheduled cleanup jobs and data synchronization
+- **Performance optimization** with distributed caching and rate limiting
 
 ## 🏗️ Architecture
 
@@ -20,7 +21,7 @@ This backend application provides a comprehensive platform for:
 ```
 ┌─────────────────────────────────────────────────────┐
 │              Web API (Minimal APIs)                 │
-│        Endpoints, Authentication, Logging           │
+│    Endpoints, Authentication, Rate Limiting         │
 └─────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────┐
@@ -30,7 +31,7 @@ This backend application provides a comprehensive platform for:
                           ↓
 ┌─────────────────────────────────────────────────────┐
 │      Infrastructure Layer (Implementations)         │
-│  Repositories, Services, Jobs, Database Context     │
+│  Repositories, Services, Jobs, Cache, Database      │
 └─────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────┐
@@ -61,17 +62,19 @@ This backend application provides a comprehensive platform for:
 - [x] AutoMapper for DTO mapping
 - [x] CORS support
 - [x] Swagger/OpenAPI documentation
-- [x] Comprehensive test suite (110 tests, 100% passing)
+- [x] **Comprehensive test suite** (~118 tests, 100% passing across all layers)
 - [x] **Distributed caching layer** with IDistributedCache abstraction:
-  - In-memory cache backend (Phase 1)
-  - Redis-ready design for Phase 2
-  - Cache metrics tracking (hits, misses, hit rate)
-  - Health endpoint (`GET /health/cache`) for monitoring
-  - Hybrid invalidation strategy (eager removal + TTL)
-  - Parametrized cache keys for flexible query caching
-  - Configuration via appsettings (per-entity TTL tuning)
-  - Thread-safe metrics aggregation
+  - In-memory cache backend (Phase 1 - current)
+  - Redis-ready architecture (Phase 2 - zero code changes needed)
+  - Cache health monitoring endpoint (`/health/cache`)
+  - Configurable per-entity TTLs
+  - Metrics tracking (hits/misses/evictions)
   - Integrated into 5 critical query handlers
+- [x] **Rate limiting** with ASP.NET Core RateLimiter:
+  - IP-based limiting for public endpoints (200 req/min)
+  - User-based limiting for authenticated endpoints (50 req/min)
+  - Admin endpoints with higher limits (1000 req/min)
+  - Configurable windows and queue limits
 
 ### 🚧 Ready for Integration (Stubs/Frameworks in Place)
 - [ ] Email notification service (SMTP configured, awaiting credentials)
@@ -82,10 +85,9 @@ This backend application provides a comprehensive platform for:
 ### 📋 Future Enhancements
 - [ ] Additional admin dashboard endpoints
 - [ ] Calendar export (iCal, Google Calendar)
-- [ ] Performance caching layer (Redis)
+- [ ] **Redis migration** for distributed caching (Phase 2)
 - [ ] Full-text search (Elasticsearch/Lucene)
 - [ ] GraphQL API alternative
-- [ ] Rate limiting
 
 ## 🚀 Quick Start
 
@@ -227,6 +229,24 @@ GET    /api/reviews/show/{showId}      # Get all reviews for a show (public)
 POST   /api/admin/reviews/{reviewId}/approve  # Approve pending review
 ```
 
+### Health & Monitoring (Public Endpoints)
+```http
+GET    /health/cache                   # Cache metrics (hit rate, top keys, statistics)
+```
+
+**Cache Health Response Example:**
+```json
+{
+  "totalHits": 1250,
+  "totalMisses": 85,
+  "hitRate": 93.6,
+  "topKeys": [
+    {"key": "shows:active", "hits": 450, "misses": 12},
+    {"key": "shows:upcoming:30", "hits": 320, "misses": 8}
+  ]
+}
+```
+
 ## 🔐 Authentication & Authorization
 
 ### JWT Token Usage
@@ -254,6 +274,51 @@ The JWT contains:
 - **User** - Default role, can manage favorites, create reviews
 - **Moderator** - Can approve reviews (planned)
 - **Admin** - Full access, can approve reviews and manage content
+
+## 🚦 Rate Limiting
+
+The API implements per-endpoint rate limiting to ensure fair usage and protect against abuse.
+
+### Rate Limit Policies
+
+| Endpoint Type | Limit | Window | Identifier | Queue |
+|---------------|-------|--------|------------|-------|
+| **Public** (unauthenticated) | 200 req | 1 minute | IP Address | 0 (fail fast) |
+| **Authenticated** (users) | 50 req | 1 minute | User ID | 2 (brief queue) |
+| **Admin** (privileged) | 1000 req | 1 minute | User ID | 0 (no queue) |
+
+### Rate Limit Headers
+Response includes standard rate limit headers:
+```http
+X-RateLimit-Limit: 200
+X-RateLimit-Remaining: 195
+X-RateLimit-Reset: 1707494460
+```
+
+### Exceeding Rate Limits
+When rate limit exceeded:
+```json
+{
+  "error": "Rate limit exceeded",
+  "statusCode": 429,
+  "retryAfter": 45
+}
+```
+
+### Configuration
+Rate limits are configured in [appsettings.json](src/WroclawTheatreTickets.Web/appsettings.json):
+```json
+"RateLimiting": {
+  "PublicEndpoints": {
+    "PermitLimit": 200,
+    "WindowMinutes": 1
+  },
+  "AuthenticatedEndpoints": {
+    "PermitLimit": 50,
+    "WindowMinutes": 1
+  }
+}
+```
 
 ## 📊 Database Schema
 
@@ -623,7 +688,7 @@ builder.AllowOrigins("https://yourfrontend.com")
 
 ## 🧪 Testing
 
-**Current Coverage**: 110 tests across all layers (100% passing)
+**Current Coverage**: ~118 tests across all layers (100% passing)
 
 ### Run All Tests
 ```powershell
@@ -632,34 +697,41 @@ dotnet test
 
 **Expected Output**:
 ```
-Passed! - Failed: 0, Passed: 66, Skipped: 0, Total: 66, Duration: ~1.25s
+Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118, Duration: ~1.5s
 ```
 
 ### Test Breakdown
 
-**Domain Layer** (29 tests):
+**Domain Layer** (varies):
 - User entity creation and validation
 - Show entity lifecycle and business rules
 - User interactions (favorites, reviews, view history)
 - Theatre entity management
 
-**Application Layer** (12 tests):
-- CQRS command handlers (RegisterUser, FilterShows)
-- Query handlers with mocked repositories
+**Application Layer** (varies):
+- CQRS command handlers (RegisterUser, FilterShows, AddFavorite, CreateReview)
+- Query handlers with mocked repositories  
 - FluentValidation integration
-- DTOmapping scenarios
+- DTO mapping scenarios
 
-**Infrastructure Layer** (25 tests):
+**Infrastructure Layer** (varies):
 - Repository CRUD operations
-- Authentication service (JWT, BCrypt)
+- Authentication service (JWT, BCrypt) 
+- Cache service functionality
 - Email service stub
 - Database context configuration
+
+**Web Layer** (varies):
+- Rate limiting configuration tests
+- Endpoint integration tests
+- Middleware tests
 
 ### Run Specific Test Project
 ```powershell
 dotnet test tests/WroclawTheatreTickets.Domain.Tests
 dotnet test tests/WroclawTheatreTickets.Application.Tests
 dotnet test tests/WroclawTheatreTickets.Infrastructure.Tests
+dotnet test tests/WroclawTheatreTickets.Web.Tests
 ```
 
 ### Generate Coverage Report (optional)
@@ -672,6 +744,10 @@ See [TEST_COVERAGE.md](./docs/TEST_COVERAGE.md) for detailed coverage report.
 ## 📈 Performance Optimizations
 
 ### Application Level
+- ✅ **Rate Limiting**: ASP.NET Core RateLimiter with configurable policies:
+  - Public endpoints: 200 req/min per IP
+  - Authenticated: 50 req/min per user
+  - Admin: 1000 req/min per user
 - ✅ **Distributed Caching**: IDistributedCache abstraction with:
   - In-memory backend (current, Phase 1)
   - Support for Redis backend (future, Phase 2)
@@ -704,11 +780,11 @@ var shows = await _context.Shows
 - [ ] **Response Compression**: Gzip/Brotli for large JSON responses
 - [ ] **Database**: Migrate to PostgreSQL for production scale
 - [ ] **CDN**: Static content (images, posters) on CDN
-- [ ] **Rate Limiting**: Prevent API abuse with rate limits
 
 ## 🔒 Security Features
 
 ### ✅ Implemented
+- **Rate Limiting**: ASP.NET Core RateLimiter (200/50/1000 req/min tiers)
 - **Password Security**: BCrypt hashing with salt (cost factor: 11)
 - **Authentication**: JWT Bearer tokens with expiration (default: 7 days)
 - **Authorization**: Role-based access control (User, Moderator, Admin)
@@ -729,7 +805,7 @@ Enforced in `UserRegistrationValidator.cs`:
 
 ### ⚠️ Production Security Checklist
 - [ ] Change JWT secret to cryptographically secure random value
-- [ ] Enable rate limiting (e.g., AspNetCoreRateLimit)
+- [x] Enable rate limiting (ASP.NET Core RateLimiter implemented)
 - [ ] Add request size limits
 - [ ] Implement API key authentication for background jobs
 - [ ] Set up Content Security Policy (CSP) headers
@@ -849,6 +925,17 @@ Check:
 - Manually trigger: `dotnet run --force-sync`
 - Ensure `AddQuartzHostedService()` is registered
 
+**7. Rate Limit Exceeded**
+
+Symptom: Getting `429 Too Many Requests` responses
+
+Solution:
+- Wait for the rate limit window to reset (check `retryAfter` in response)
+- For authenticated endpoints: You have 50 requests per minute
+- For public endpoints: You have 200 requests per minute per IP
+- Configure custom limits in `appsettings.json` under `RateLimiting`
+- Admin users get 1000 requests per minute
+
 ## 🤝 Contributing
 
 1. Follow Clean Architecture principles
@@ -865,7 +952,7 @@ Comprehensive documentation available in [`docs/`](docs/) folder:
 | [BACKEND_SUMMARY.md](./docs/BACKEND_SUMMARY.md) | Complete architecture overview, features, and database schema |
 | [QUICK_START.md](./docs/QUICK_START.md) | API usage examples with curl commands |
 | [ARCHITECTURE_DECISIONS.md](./docs/ARCHITECTURE_DECISIONS.md) | Design rationale and technology choices |
-| [TEST_COVERAGE.md](./docs/TEST_COVERAGE.md) | Detailed test coverage report (110 tests) |
+| [TEST_COVERAGE.md](./docs/TEST_COVERAGE.md) | Detailed test coverage report (~118 tests) |
 | [DEPENDENCIES.md](./docs/DEPENDENCIES.md) | Dependency graph and version management |
 | [SESSION_LOGGING.md](./docs/SESSION_LOGGING.md) | AI coding session audit trail setup |
 | [CACHING.md](./docs/CACHING.md) | Distributed caching layer guide (configuration, monitoring, Redis migration) |

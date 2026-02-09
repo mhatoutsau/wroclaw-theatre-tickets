@@ -135,6 +135,22 @@ npm run lint        # ESLint (if configured)
 
 	- If the repo currently has no backend source files (only the `.slnx`), ask the owner for the intended project folders or branch that contains the code; do not scaffold a full backend without instruction.
 
+Automatic Session Logging
+
+- **REQUIREMENT**: Every AI agent session MUST automatically log all user prompts and assistant responses to `.chatlogs/prompts/` folder.
+- **Timing**: Save logs AFTER each user request is completed (not before). Create one file per message.
+- **Automation**: Treat this as an automatic step in every interaction — do not ask for permission or confirmation.
+- **Workflow**:
+  1. After processing a user request, immediately create a prompt log file
+  2. After generating a response, immediately create a response log file
+  3. Use timestamps in ascending order to maintain chronological ordering
+  4. Include context, goals, and decisions made
+- **File Format**: Use YAML front-matter + markdown body (see Save prompts & chat logs section below)
+- **Error Recovery**: If log creation fails, log the error but continue with main task — don't block user work
+- **Privacy**: Redact secrets, credentials, tokens, API keys before saving; set `redacted: true` in front-matter
+- **Benefits**: Creates reproducible audit trail, enables AI handoff, supports debugging, documents decision history
+- **Example Trigger**: After user says "Create cleanup job", save the prompt, complete the work, then save the response.
+
 Save prompts & chat logs
 
 - Requirement: persist every user prompt and assistant response to separate files so humans can audit, reproduce, and continue an agent session.

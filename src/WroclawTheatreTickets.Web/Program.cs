@@ -83,6 +83,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -90,3 +91,7 @@ app.UseAuthorization();
 Endpoints.RegisterEndpoints(app);
 
 app.Run();
+
+// Make Program accessible to tests
+public partial class Program { }
+

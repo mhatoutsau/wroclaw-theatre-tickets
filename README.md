@@ -247,9 +247,10 @@ Edit `appsettings.json`:
 
 ## 📖 Documentation
 
-- [Backend Summary](./BACKEND_SUMMARY.md) - Complete feature overview
-- [Quick Start Guide](./QUICK_START.md) - API examples and commands
-- [Architecture Decisions](./ARCHITECTURE_DECISIONS.md) - Design rationale
+- [Backend Summary](./docs/BACKEND_SUMMARY.md) - Complete feature overview
+- [Quick Start Guide](./docs/QUICK_START.md) - API examples and commands
+- [Architecture Decisions](./docs/ARCHITECTURE_DECISIONS.md) - Design rationale
+- [Session Logging](./docs/SESSION_LOGGING.md) - AI coding session audit trail setup
 
 ## 🧪 Testing
 

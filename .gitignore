@@ -2,3 +2,5 @@
 .vs/
 bin/
 obj/
+/src/WroclawTheatreTickets.Web/logs/*
+/src/WroclawTheatreTickets.Web/theatre.db

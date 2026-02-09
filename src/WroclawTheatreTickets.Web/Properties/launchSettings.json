@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "WroclawTheatreTickets.Web": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:53398;http://localhost:53399"
+    }
+  }
+}

@@ -28,7 +28,7 @@ builder.Services.AddQuartz(q =>
     q.AddTrigger(opts => opts
         .ForJob(syncJobKey)
         .WithIdentity(TheatreRepertoireJobConfig.TriggerKey)
-        .WithCronSchedule("0 2 * * ?") // Daily at 2:00 AM
+        .WithCronSchedule("0 0 2 ? * *") // Daily at 2:00 AM
         .WithDescription("Daily theatre repertoire synchronization trigger"));
 
     // Register the cleanup old shows job (weekly on Sunday at 3:00 AM)
@@ -37,7 +37,7 @@ builder.Services.AddQuartz(q =>
     q.AddTrigger(opts => opts
         .ForJob(cleanupJobKey)
         .WithIdentity("CleanupOldShowsTrigger")
-        .WithCronSchedule("0 3 ? * SUN") // Weekly on Sunday at 3:00 AM
+        .WithCronSchedule("0 0 3 ? * SUN") // Weekly on Sunday at 3:00 AM
         .WithDescription("Weekly cleanup of shows older than 2 years"));
 });
 
@@ -49,11 +49,11 @@ builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
-// Migrate database
+// Initialize database (creates tables if they don't exist)
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<TheatreDbContext>();
-    dbContext.Database.Migrate();
+    dbContext.Database.EnsureCreated();
 }
 
 // Check for command-line arguments to force synchronization on startup
@@ -62,13 +62,11 @@ if (args.Contains("--force-sync"))
     Log.Information("Force synchronization argument detected. Running synchronization on startup...");
     try
     {
-        using (var scope = app.Services.CreateScope())
-        {
-            var scheduler = scope.ServiceProvider.GetRequiredService<ISchedulerFactory>().GetScheduler().Result;
-            var jobKey = new JobKey("SyncTheatreRepertoireJob");
-            await scheduler.TriggerJob(jobKey);
-            Log.Information("Synchronization job triggered successfully");
-        }
+        using var scope = app.Services.CreateScope();
+        var scheduler = scope.ServiceProvider.GetRequiredService<ISchedulerFactory>().GetScheduler().Result;
+        var jobKey = new JobKey("SyncTheatreRepertoireJob");
+        await scheduler.TriggerJob(jobKey);
+        Log.Information("Synchronization job triggered successfully");
     }
     catch (Exception ex)
     {

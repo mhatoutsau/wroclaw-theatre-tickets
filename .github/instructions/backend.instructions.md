@@ -17,3 +17,5 @@ using var stream = new FileStream("file.txt", FileMode.Open);
 ```
 
 Plase each class/interface/record etc to it's own file.
+
+Generate unit test files for each service/repository/handler etc. and place them in the tests folder, following the same structure as the src folder.

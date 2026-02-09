@@ -39,7 +39,7 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
-    public async Task RateLimitingConfiguration_PublicPolicyExists()
+    public void RateLimitingConfiguration_PublicPolicyExists()
     {
         // Arrange & Act
         var policyName = RateLimitingConfiguration.PublicEndpointsPolicy;
@@ -49,7 +49,7 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
-    public async Task RateLimitingConfiguration_AuthenticatedPolicyExists()
+    public void RateLimitingConfiguration_AuthenticatedPolicyExists()
     {
         // Arrange & Act
         var policyName = RateLimitingConfiguration.AuthenticatedEndpointsPolicy;
@@ -59,7 +59,7 @@ public class RateLimitingTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
-    public async Task RateLimitingConfiguration_AdminPolicyExists()
+    public void RateLimitingConfiguration_AdminPolicyExists()
     {
         // Arrange & Act
         var policyName = RateLimitingConfiguration.AdminEndpointsPolicy;

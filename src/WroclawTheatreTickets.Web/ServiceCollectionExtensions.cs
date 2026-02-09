@@ -11,6 +11,7 @@ using WroclawTheatreTickets.Application.Contracts.Services;
 using WroclawTheatreTickets.Application.Contracts.Cache;
 using WroclawTheatreTickets.Application.Mapping;
 using WroclawTheatreTickets.Application.UseCases.Shows.Commands;
+using WroclawTheatreTickets.Infrastructure.Configuration;
 using WroclawTheatreTickets.Infrastructure.Data;
 using WroclawTheatreTickets.Infrastructure.Repositories;
 using WroclawTheatreTickets.Infrastructure.Services;
@@ -53,6 +54,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<INotificationService, NotificationService>();
+        
+        // Theatre Repertoire Sync Services
+        services.Configure<TheatreApiConfiguration>(configuration.GetSection("TheatreApis:TeatrPolski"));
+        services.AddScoped<IRepertoireDataService, TeatrPolskiRepertoireDataService>();
+        services.AddScoped<ITheatreProviderService, TheatreProviderService>();
         services.AddScoped<ITheatreRepertoireSyncService, TheatreRepertoireSyncService>();
 
         // FluentValidation - scan Application assembly for validators

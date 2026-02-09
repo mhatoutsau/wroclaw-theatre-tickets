@@ -6,6 +6,9 @@
             "matchCommandLine": true
         },
         "dotnet test": true,
-        "Rename-Item": true
+        "Rename-Item": true,
+        "dotnet clean": true,
+        "dotnet restore": true,
+        "Select": true
     }
 }

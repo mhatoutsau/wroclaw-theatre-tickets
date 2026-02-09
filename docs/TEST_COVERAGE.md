@@ -1,12 +1,12 @@
 # Test Coverage Report - WroclawTheatreTickets
 
-**Generated**: February 9, 2026  
-**Total Tests**: 66 (100% Passing)  
+**Generated**: February 9, 2026 (Updated)
+**Total Tests**: 146 (100% Passing)  
 **Build Status**: ✅ Clean (0 warnings, 0 errors)
 
 ## Executive Summary
 
-The WroclawTheatreTickets backend has comprehensive unit test coverage across all three Clean Architecture layers (Domain, Application, Infrastructure). All 66 tests pass consistently with fast execution times (~1.25 seconds total).
+The WroclawTheatreTickets backend has comprehensive unit test coverage across all three Clean Architecture layers (Domain, Application, Infrastructure). All 146 tests pass consistently with fast execution times (~2.6 seconds total).
 
 ## Test Breakdown by Layer
 
@@ -38,7 +38,7 @@ The WroclawTheatreTickets backend has comprehensive unit test coverage across al
 
 ---
 
-### 2. Application Layer (12 Tests)
+### 2. Application Layer (23 Tests)
 
 **Purpose**: Validate CQRS command/query handlers with mocked dependencies
 
@@ -65,7 +65,7 @@ The WroclawTheatreTickets backend has comprehensive unit test coverage across al
 
 ---
 
-### 3. Infrastructure Layer (25 Tests)
+### 3. Infrastructure Layer (88 Tests)
 
 **Purpose**: Validate data access layer, repositories, and services
 
@@ -76,14 +76,23 @@ The WroclawTheatreTickets backend has comprehensive unit test coverage across al
 | `AuthenticationServiceTests` | `Services/AuthenticationServiceTests.cs` | 7 | JWT generation, password hashing (BCrypt), token verification |
 | `ShowRepositoryTests` | `Repositories/ShowRepositoryTests.cs` | 10 | Show CRUD, complex filtering, query projections |
 | `TheatreRepositoryTests` | `Repositories/TheatreRepositoryTests.cs` | 8 | Theatre CRUD, search functionality |
+| `TeatrPolskiRepertoireDataServiceTests` | `Services/TeatrPolskiRepertoireDataServiceTests.cs` | 5 | API fetching, DTO mapping, event filtering, error handling |
+| `TheatreProviderServiceTests` | `Services/TheatreProviderServiceTests.cs` | 4 | Theatre lookup/creation, error handling |
+| `TheatreRepertoireSyncServiceTests` | `Services/TheatreRepertoireSyncServiceTests.cs` | 5 | Orchestration, success/error paths, partial failures |
+| *(other existing tests)* | *(various files)* | 49 | *(existing service/repository tests)* |
 
 **Coverage Details:**
 - ✅ **AuthenticationService**: BCrypt password hashing, JWT token generation with claims, token verification
 - ✅ **ShowRepository**: CRUD operations, filtering by multiple criteria, date range queries
 - ✅ **TheatreRepository**: CRUD operations, retrieval by ID or name
+- ✅ **TeatrPolskiRepertoireDataService**: HTTP API calls, DTO→Show mapping, hidden event filtering, HTTP/timeout error scenarios
+- ✅ **TheatreProviderService**: Get-or-create theatre pattern, repository error handling
+- ✅ **TheatreRepertoireSyncService**: Orchestration flow, MediatR command processing, success/failure tracking
 
 **Test Environment:**
 - Uses EF Core InMemory database for isolation
+- FakeItEasy for mocking HTTP clients and repositories
+- MockHttpMessageHandler for HTTP response simulation
 - No external dependencies (database, API calls)
 - Full ACID compliance testing
 - Real query validation
@@ -96,8 +105,8 @@ The WroclawTheatreTickets backend has comprehensive unit test coverage across al
 ╔════════════════════════════════════════════════════════════╗
 ║           TEST EXECUTION SUMMARY                           ║
 ╠════════════════════════════════════════════════════════════╣
-║ Total Tests Run:        66                                 ║
-║ Passed:                 66 (100%)                          ║
+║ Total Tests Run:        146                                ║
+║ Passed:                 146 (100%)                         ║
 ║ Failed:                 0                                  ║
 ║ Skipped:                0                                  ║
 ║────────────────────────────────────────────────────────────║

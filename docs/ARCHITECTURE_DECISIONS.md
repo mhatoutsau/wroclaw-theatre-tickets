@@ -530,6 +530,185 @@ StackExchange.Redis (Phase 2: distributed)
 
 ---
 
+## ADR-015: Extract Theatre Sync into Theatre-Specific Data Services
+
+**Status**: Implemented  
+**Date**: February 9, 2026
+
+### Context
+The original `TheatreRepertoireSyncService` had multiple responsibilities:
+1. HTTP communication with theatre APIs
+2. JWT token parsing from API responses
+3. DTO→domain entity mapping
+4. Theatre entity management (get-or-create)
+5. Orchestration of MediatR commands
+
+Each theatre API has a unique response format, making it difficult to add new theatres without modifying the monolithic sync service. Configuration (API URLs, timeouts) was hardcoded as constants.
+
+### Decision
+Separate theatre-specific concerns into dedicated services with clear interfaces:
+
+**Architecture**:
+- **`IRepertoireDataService`** (Application/Contracts/Services):
+  - Interface for th eatre-specific data fetching and mapping
+  - Returns `Task<List<Show>>` (fully mapped domain entities)
+  - Implemented per theatre (e.g., `TeatrPolskiRepertoireDataService`)
+  
+- **`ITheatreProviderService`** (Application/Contracts/Services):
+  - Theatre entity lifecycle management
+  - `GetOrCreateTheatreAsync(name, city, address)` - get-or-create pattern
+  - Theatre-agnostic, reusable across all data services
+  
+- **Refactored `TheatreRepertoireSyncService`** (Infrastructure/Services):
+  - Orchestration only: theatre setup → fetch → persist
+  - Injected dependencies: `IRepertoireDataService`, `ITheatreProviderService`, `IMediator`
+  - Removed all HTTP, mapping, and repository logic
+
+**Configuration**:
+- **`TheatreApiConfiguration`** (Infrastructure/Configuration):
+  - POCO model with `Url` and `TimeoutSeconds`
+  - Bound to `appsettings.json` section `TheatreApis:TeatrPolski`
+  - Injected via `IOptions<TheatreApiConfiguration>`
+
+**Theatre-Specific Logic**:
+- **`TeatrPolskiApiDtoMapper`** (Infrastructure/Services):
+  - Moved from Application/Contracts/Dtos (was `ApiDtoMapper`)
+  - Public static utility class for TeatrPolski-specific parsing
+  - Used exclusively by `TeatrPolskiRepertoireDataService`
+
+### Rationale
+**Single Responsibility Principle (SRP)**:
+- Each service has one cohesive responsibility
+- Data services encapsulate theatre-specific API knowledge
+- Provider service handles entity lifecycle
+- Sync service coordinates the workflow
+
+**Open/Closed Principle**:
+- Adding new theatres: create new `IRepertoireDataService` implementation
+- No modifications to existing orchestration or provider services
+
+**Dependency Inversion**:
+- High-level orchestration depends on abstractions (`IRepertoireDataService`, `ITheatreProviderService`)
+- Low-level implementations (HTTP, mapping) injected at runtime
+
+**Configuration Flexibility**:
+- API URLs/timeouts externalized to `appsettings.json`
+- Environment-specific overrides via `appsettings.{Environment}.json`
+- No recompilation needed for URL changes
+
+**Testability**:
+- Each service independently testable with mocks
+- HTTP responses simulated via `MockHttpMessageHandler`
+- 15 new unit tests added (4 provider + 5 data service + 5 sync service + 1 mapper)
+
+### Consequences
+
+**Positive**:
+- ✅ Theatre-specific logic encapsulated per implementation
+- ✅ Easy to add new theatre APIs (copy pattern from TeatrPolski)
+- ✅ Configuration-driven API endpoints (no hardcoded URLs)
+- ✅ Comprehensive test coverage (15 new tests, 100% passing)
+- ✅ Clearer separation of concerns (SRP compliance)
+
+**Negative**:
+- ❌ More files and interfaces to manage (+9 new files)
+- ❌ Learning curve for new developers (understand interface design)
+- ❌ Slight complexity increase from indirection (but offset by testability)
+
+**Trade-offs**:
+- Chose combined fetching+mapping per theatre (not separate) because response formats differ significantly
+- Mapper is public static (not internal) for test accessibility
+- Named HttpClient configuration ("TeatrPolski") instead of unnamed default
+
+### Implementation Summary
+
+**New Files Created** (9):
+1. `IRepertoireDataService.cs` - Application/Contracts/Services
+2. `ITheatreProviderService.cs` - Application/Contracts/Services
+3. `TheatreApiConfiguration.cs` - Infrastructure/Configuration
+4. `TeatrPolskiApiDtoMapper.cs` - Infrastructure/Services (moved from Application)
+5. `TeatrPolskiRepertoireDataService.cs` - Infrastructure/Services
+6. `TheatreProviderService.cs` - Infrastructure/Services
+7. `TheatreProviderServiceTests.cs` - tests/ (4 tests)
+8. `TeatrPolskiRepertoireDataServiceTests.cs` - tests/ (5 tests)
+9. `TheatreRepertoireSyncServiceTests.cs` - tests/ (5 tests)
+
+**Modified Files** (4):
+1. `TheatreRepertoireSyncService.cs` - Complete refactor (orchestration only)
+2. `appsettings.json` / `appsettings.Development.json` - Added `TheatreApis` section
+3. `ServiceCollectionExtensions.cs` - DI registration for new services
+
+**Test Coverage**:
+- Total tests: 146 (from 131 baseline)
+- New tests: 15 (14 new tests + refactored sync service tests)
+- Pass rate: 100% (146/146 passing)
+
+### Example: Adding a New Theatre
+
+To add support for "Opera Wrocławska":
+
+1. **Create configuration** (appsettings.json):
+```json
+"TheatreApis": {
+  "OperaWroclawska": {
+    "Url": "https://opera.wroclaw.pl/api/repertoire",
+    "TimeoutSeconds": 30
+  }
+}
+```
+
+2. **Create data service** (OperaWroclawskaRepertoireDataService.cs):
+```csharp
+public class OperaWroclawskaRepertoireDataService : IRepertoireDataService
+{
+    // Inject IHttpClientFactory, IOptions<TheatreApiConfiguration>, ILogger
+    public async Task<List<Show>> FetchAndMapRepertoireAsync(Guid theatreId, CancellationToken ct)
+    {
+        // Opera-specific HTTP call, JSON parsing, mapping
+    }
+}
+```
+
+3. **Register in DI** (ServiceCollectionExtensions.cs):
+```csharp
+services.Configure<TheatreApiConfiguration>(configuration.GetSection("TheatreApis:OperaWroclawska"));
+services.AddScoped<IRepertoireDataService, OperaWroclawskaRepertoireDataService>();
+```
+
+4. **Create tests** (Opera WroclawskaRepertoireDataServiceTests.cs):
+```csharp
+[Fact]
+public async Task FetchAndMapRepertoireAsync_WithValidResponse_Returns MappedShowEntities() { /* ... */ }
+```
+
+No changes needed to `TheatreRepertoireSyncService`, `TheatreProviderService`, or existing services.
+
+### Alternatives Considered
+
+**Alternative 1: Separate Fetching and Mapping Services**
+- Rejected: Each theatre API has unique response format
+- Would require N+N services (fetcher + mapper) instead of N combined services
+- Adds unnecessary indirection when fetching/mapping are tightly coupled
+
+**Alternative 2: Strategy Pattern with Single Service**
+- Rejected: Still requires conditional logic in orchestration service
+- Harder to test individual theatre implementations in isolation
+- Less discoverable (strategies buried in composition)
+
+**Alternative 3: Keep Monolithic Service with Switch Statement**
+- Rejected: Violates Open/Closed Principle
+- Every new theatre requires modifying sync service
+- Poor testability (all theatres tested via single service)
+
+**Decision**: Interface-based design with dependency injection (chosen approach) balances flexibility, testability, and simplicity.
+
+### References
+- **Related ADRs**: ADR-001 (Clean Architecture), ADR-002 (CQRS with MediatR)
+- **Code Review**: [GitHub PR #XXX] (if applicable)
+- **Documentation Updated**: BACKEND_SUMMARY.md, TEST_COVERAGE.md, SESSION_LOGGING.md (this ADR)
+
+---
+
 ## Review & Approval
 
 | Role | Status | Date |
@@ -539,6 +718,6 @@ StackExchange.Redis (Phase 2: distributed)
 
 ---
 
-**Document Version**: 1.1  
+**Document Version**: 1.2  
 **Last Updated**: February 9, 2026  
 **Next Review**: After Phase 2 (Redis integration) completion

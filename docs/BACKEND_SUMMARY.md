@@ -63,6 +63,8 @@ Implements application logic and interfaces for external services.
 - `IEmailService` - Email notifications (registration, reminders, digests)
 - `INotificationService` - Push notifications & digestion
 - `IParsingService` - Web scraping for theater websites
+- `IRepertoireDataService` - Theatre-specific data fetching & mapping interface (returns Show domain entities)
+- `ITheatreProviderService` - Theatre entity management interface (GetOrCreateTheatreAsync)
 
 #### Use Cases (MediatR):
 - **Shows**: GetAllShows, GetShowById, GetUpcomingShows, SearchShows, FilterShows, GetMostViewed
@@ -103,6 +105,9 @@ Implements repositories and external services.
 - `EmailService` - SMTP configuration, email templates
 - `NotificationService` - Push notification stubs (ready for Firebase/OneSignal)
 - `ParsingService` - HTML parsing with HtmlAgilityPack
+- `TeatrPolskiRepertoireDataService` - Fetches and maps Teatr Polski repertoire from API to Show domain entities
+- `TheatreProviderService` - Manages theatre entity lookup and creation (get-or-create pattern)
+- `TheatreRepertoireSyncService` - Or chestrates theatre synchronization (theatre setup → fetch → persist)
 
 ### 4. **WroclawTheatreTickets.Web** (API Layer)
 ASP.NET Core Minimal APIs with dependency injection.

@@ -8,11 +8,13 @@ using System.Text;
 using MediatR;
 using WroclawTheatreTickets.Application.Contracts.Repositories;
 using WroclawTheatreTickets.Application.Contracts.Services;
+using WroclawTheatreTickets.Application.Contracts.Cache;
 using WroclawTheatreTickets.Application.Mapping;
 using WroclawTheatreTickets.Application.UseCases.Shows.Commands;
 using WroclawTheatreTickets.Infrastructure.Data;
 using WroclawTheatreTickets.Infrastructure.Repositories;
 using WroclawTheatreTickets.Infrastructure.Services;
+using WroclawTheatreTickets.Infrastructure.Cache;
 using FluentValidation;
 
 public static class ServiceCollectionExtensions
@@ -25,6 +27,12 @@ public static class ServiceCollectionExtensions
 
         // MediatR - scan Application assembly for handlers
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<SaveOrUpdateShowCommand>());
+
+        // Cache - IDistributedCache with in-memory backend (can be replaced with Redis)
+        services.AddDistributedMemoryCache();
+        services.AddSingleton<CacheMetrics>();
+        services.AddSingleton<ICacheService, CacheService>();
+        services.Configure<CacheOptions>(configuration.GetSection(CacheKeys.ConfigurationSection));
 
         // AutoMapper
         services.AddAutoMapper(cfg =>

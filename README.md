@@ -61,7 +61,17 @@ This backend application provides a comprehensive platform for:
 - [x] AutoMapper for DTO mapping
 - [x] CORS support
 - [x] Swagger/OpenAPI documentation
-- [x] Comprehensive test suite (66 tests, 100% passing)
+- [x] Comprehensive test suite (110 tests, 100% passing)
+- [x] **Distributed caching layer** with IDistributedCache abstraction:
+  - In-memory cache backend (Phase 1)
+  - Redis-ready design for Phase 2
+  - Cache metrics tracking (hits, misses, hit rate)
+  - Health endpoint (`GET /health/cache`) for monitoring
+  - Hybrid invalidation strategy (eager removal + TTL)
+  - Parametrized cache keys for flexible query caching
+  - Configuration via appsettings (per-entity TTL tuning)
+  - Thread-safe metrics aggregation
+  - Integrated into 5 critical query handlers
 
 ### 🚧 Ready for Integration (Stubs/Frameworks in Place)
 - [ ] Email notification service (SMTP configured, awaiting credentials)
@@ -105,7 +115,7 @@ dotnet build WroclawTheatreTickets.slnx -c Release
 4. **Run tests (optional but recommended)**
 ```powershell
 dotnet test
-# Expected: 66 tests passed (100% success rate)
+# Expected: 110 tests passed (100% success rate)
 ```
 
 5. **Launch the application**
@@ -134,6 +144,7 @@ GET    /api/shows/upcoming?days=30     # Get shows in next N days (default: 30)
 GET    /api/shows/search?keyword=opera # Search by keyword (title/cast/director)
 POST   /api/shows/filter               # Advanced filtering (see below)
 GET    /api/shows/trending/viewed      # Most viewed shows (sorted by viewCount)
+GET    /health/cache                   # Cache health & metrics (monitoring endpoint)
 ```
 
 **Filter Request Body Example:**
@@ -310,6 +321,7 @@ The JWT contains:
 | **Validation** | FluentValidation | 11.9.2 | Input validation rules |
 | **Mapping** | AutoMapper | 12.0.1 | DTO ↔ Entity mapping |
 | **Logging** | Serilog | 4.0.0 | Structured logging (console + file) |
+| **Caching** | IDistributedCache | 10.0.0 | In-memory + Redis-ready abstraction |
 | **Scheduling** | Quartz.NET | 3.13.0 | Background job scheduling |
 | **Web Scraping** | HtmlAgilityPack | 1.11.65 | HTML parsing for theatre sites |
 | **API Docs** | Swashbuckle | 7.2.0 | OpenAPI/Swagger generation |
@@ -359,6 +371,10 @@ WroclawTheatreTickets/
 │   │
 │   ├── WroclawTheatreTickets.Application/     # Application Logic Layer
 │   │   ├── Contracts/
+│   │   │   ├── Cache/                         # Caching abstraction layer
+│   │   │   │   ├── CacheKeys.cs               # Cache key constants
+│   │   │   │   ├── CacheOptions.cs            # Configuration POCO
+│   │   │   │   └── CacheMetrics.cs            # Metrics tracker
 │   │   │   ├── Dtos/                          # Data Transfer Objects
 │   │   │   ├── Repositories/                  # Repository interfaces
 │   │   │   └── Services/                      # Service interfaces
@@ -383,6 +399,8 @@ WroclawTheatreTickets/
 │   │       └── CreateReviewValidator.cs       # Rating 1-5, comment length
 │   │
 │   ├── WroclawTheatreTickets.Infrastructure/  # Data Access & External Services
+│   │   ├── Cache/
+│   │   │   └── CacheService.cs                # IDistributedCache wrapper
 │   │   ├── Data/
 │   │   │   └── TheatreDbContext.cs            # EF Core DbContext
 │   │   ├── Repositories/                      # Repository implementations
@@ -422,7 +440,7 @@ WroclawTheatreTickets/
 │   ├── BACKEND_SUMMARY.md                    # Complete architecture overview
 │   ├── QUICK_START.md                        # Getting started guide
 │   ├── ARCHITECTURE_DECISIONS.md             # Design rationale document
-│   ├── TEST_COVERAGE.md                      # Test coverage report (66 tests)
+│   ├── TEST_COVERAGE.md                      # Test coverage report (110 tests)
 │   ├── DEPENDENCIES.md                       # Dependency graph & versions
 │   └── SESSION_LOGGING.md                    # AI coding session audit trail
 │
@@ -547,6 +565,42 @@ For Google/Facebook authentication, add to `appsettings.json`:
 }
 ```
 
+### Caching Configuration
+
+Edit [`appsettings.json`](src/WroclawTheatreTickets.Web/appsettings.json) to configure cache TTLs:
+```json
+{
+  "CacheOptions": {
+    "Enabled": true,
+    "TheatresTtlMinutes": 1440,        // 24 hours
+    "AllShowsTtlMinutes": 15,          // 15 minutes
+    "UpcomingShowsTtlMinutes": 30,     // 30 minutes
+    "TrendingShowsTtlMinutes": 60,     // 1 hour
+    "ShowDetailTtlMinutes": 10,        // 10 minutes
+    "SearchResultsTtlMinutes": 5,      // 5 minutes
+    "FilteredShowsTtlMinutes": 10,     // 10 minutes
+    "ReviewsTtlMinutes": 30,           // 30 minutes
+    "UserFavoritesTtlMinutes": 5       // 5 minutes
+  }
+}
+```
+
+**Features**:
+- Togglable with `Enabled` flag (for easy cache bypass)
+- Per-entity TTL configuration
+- Metrics tracking at `/health/cache`
+- Thread-safe in multi-threaded environments
+- Parametrized cache keys for dynamic queries
+- Hybrid invalidation (eager + TTL safety net)
+
+**Future Redis Migration**:
+Switch backend without code changes via `IDistributedCache` abstraction:
+```csharp
+services.AddStackExchangeRedisCache(options => {
+    options.Configuration = configuration.GetConnectionString("Redis");
+});
+```
+
 ### CORS Configuration
 
 Development (allow all):
@@ -569,7 +623,7 @@ builder.AllowOrigins("https://yourfrontend.com")
 
 ## 🧪 Testing
 
-**Current Coverage**: 66 tests across all layers (100% passing)
+**Current Coverage**: 110 tests across all layers (100% passing)
 
 ### Run All Tests
 ```powershell
@@ -618,6 +672,12 @@ See [TEST_COVERAGE.md](./docs/TEST_COVERAGE.md) for detailed coverage report.
 ## 📈 Performance Optimizations
 
 ### Application Level
+- ✅ **Distributed Caching**: IDistributedCache abstraction with:
+  - In-memory backend (current, Phase 1)
+  - Support for Redis backend (future, Phase 2)
+  - Hit rate tracking and metrics via `/health/cache`
+  - Integrated cache invalidation on data changes
+  - ~50-100MB estimated memory for typical dataset
 - ✅ **Async/Await**: All I/O operations (database, HTTP) use async patterns
 - ✅ **Database Indexes**: Strategic indexes on high-traffic columns:
   - `Show.StartDateTime`, `Show.IsActive`, `Show.ExternalId`
@@ -639,7 +699,8 @@ var shows = await _context.Shows
 ```
 
 ### Future Performance Enhancements
-- [ ] **Redis Caching**: Cache frequently accessed shows (trending, upcoming)
+- [ ] **Redis Caching**: [Phase 2] Migrate from in-memory to distributed Redis cache
+- [ ] **Cache Warming**: Pre-load frequently accessed data on app startup
 - [ ] **Response Compression**: Gzip/Brotli for large JSON responses
 - [ ] **Database**: Migrate to PostgreSQL for production scale
 - [ ] **CDN**: Static content (images, posters) on CDN
@@ -804,9 +865,10 @@ Comprehensive documentation available in [`docs/`](docs/) folder:
 | [BACKEND_SUMMARY.md](./docs/BACKEND_SUMMARY.md) | Complete architecture overview, features, and database schema |
 | [QUICK_START.md](./docs/QUICK_START.md) | API usage examples with curl commands |
 | [ARCHITECTURE_DECISIONS.md](./docs/ARCHITECTURE_DECISIONS.md) | Design rationale and technology choices |
-| [TEST_COVERAGE.md](./docs/TEST_COVERAGE.md) | Detailed test coverage report (66 tests) |
+| [TEST_COVERAGE.md](./docs/TEST_COVERAGE.md) | Detailed test coverage report (110 tests) |
 | [DEPENDENCIES.md](./docs/DEPENDENCIES.md) | Dependency graph and version management |
 | [SESSION_LOGGING.md](./docs/SESSION_LOGGING.md) | AI coding session audit trail setup |
+| [CACHING.md](./docs/CACHING.md) | Distributed caching layer guide (configuration, monitoring, Redis migration) |
 
 ## 🤝 Contributing
 
@@ -898,7 +960,7 @@ This project is licensed under the MIT License - see LICENSE file for details.
 - ✅ Web API Layer (100%)
 - ✅ Authentication & Authorization (100%)
 - ✅ Scheduled Jobs (100%)
-- ✅ Unit Tests (66 tests, 100% passing)
+- ✅ Unit Tests (110 tests, 100% passing)
 - 🚧 Theatre Parsers (Framework ready, site-specific implementations needed)
 - 🚧 Email Service (SMTP configured, credentials needed)
 - 🚧 Push Notifications (Framework ready, provider integration needed)

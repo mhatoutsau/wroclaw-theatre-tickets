@@ -3,8 +3,11 @@ using Microsoft.Extensions.Logging;
 using FluentValidation;
 using WroclawTheatreTickets.Application.Contracts.Repositories;
 using WroclawTheatreTickets.Application.Contracts.Dtos;
+using WroclawTheatreTickets.Application.Contracts.Services;
+using WroclawTheatreTickets.Application.Contracts.Cache;
 using WroclawTheatreTickets.Domain.Common;
 using WroclawTheatreTickets.Domain.Entities;
+using Microsoft.Extensions.Options;
 
 namespace WroclawTheatreTickets.Application.UseCases.Shows.Commands;
 
@@ -34,17 +37,23 @@ public class SaveOrUpdateShowCommandHandler : IRequestHandler<SaveOrUpdateShowCo
 {
     private readonly IShowRepository _showRepository;
     private readonly ITheatreRepository _theatreRepository;
+    private readonly ICacheService _cacheService;
+    private readonly CacheOptions _cacheOptions;
     private readonly AutoMapper.IMapper _mapper;
     private readonly ILogger<SaveOrUpdateShowCommandHandler> _logger;
 
     public SaveOrUpdateShowCommandHandler(
         IShowRepository showRepository,
         ITheatreRepository theatreRepository,
+        ICacheService cacheService,
+        IOptions<CacheOptions> cacheOptions,
         AutoMapper.IMapper mapper,
         ILogger<SaveOrUpdateShowCommandHandler> logger)
     {
         _showRepository = showRepository;
         _theatreRepository = theatreRepository;
+        _cacheService = cacheService;
+        _cacheOptions = cacheOptions.Value;
         _mapper = mapper;
         _logger = logger;
     }
@@ -83,6 +92,9 @@ public class SaveOrUpdateShowCommandHandler : IRequestHandler<SaveOrUpdateShowCo
 
                 await _showRepository.UpdateAsync(existingShow);
                 _logger.LogInformation("Updated show {ShowId}: {Title}", existingShow.Id, request.Title);
+
+                // Invalidate related caches
+                await InvalidateCaches(existingShow.Id, cancellationToken);
             }
             else
             {
@@ -105,6 +117,9 @@ public class SaveOrUpdateShowCommandHandler : IRequestHandler<SaveOrUpdateShowCo
 
                 await _showRepository.AddAsync(newShow);
                 _logger.LogInformation("Created new show {ShowId}: {Title}", newShow.Id, request.Title);
+
+                // Invalidate related caches for new show
+                await InvalidateCaches(newShow.Id, cancellationToken);
             }
 
             var result = existingShow != null
@@ -118,6 +133,29 @@ public class SaveOrUpdateShowCommandHandler : IRequestHandler<SaveOrUpdateShowCo
             _logger.LogError(ex, "Error saving/updating show: {Title}", request.Title);
             return Result<ShowDto>.Failure($"Error saving show: {ex.Message}");
         }
+    }
+
+    private async Task InvalidateCaches(Guid showId, CancellationToken cancellationToken)
+    {
+        if (!_cacheOptions.Enabled)
+            return;
+
+        // Clear show-related caches
+        var keysToInvalidate = new[]
+        {
+            CacheKeys.ShowsActive,
+            string.Format(CacheKeys.ShowsUpcoming, 30),
+            string.Format(CacheKeys.ShowsTrending, 10),
+            string.Format(CacheKeys.ShowDetail, showId),
+            string.Format(CacheKeys.ReviewsForShow, showId)
+        };
+
+        foreach (var key in keysToInvalidate)
+        {
+            await _cacheService.RemoveAsync(key);
+        }
+
+        _logger.LogInformation("Cache invalidation completed for show {ShowId}", showId);
     }
 }
 

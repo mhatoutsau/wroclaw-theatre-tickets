@@ -3,25 +3,49 @@ namespace WroclawTheatreTickets.Application.UseCases.Shows.Queries;
 using MediatR;
 using WroclawTheatreTickets.Application.Contracts.Dtos;
 using WroclawTheatreTickets.Application.Contracts.Repositories;
+using WroclawTheatreTickets.Application.Contracts.Services;
+using WroclawTheatreTickets.Application.Contracts.Cache;
 using AutoMapper;
+using Microsoft.Extensions.Options;
 
 public record GetAllShowsQuery : IRequest<IEnumerable<ShowDto>>;
 
 public class GetAllShowsQueryHandler : IRequestHandler<GetAllShowsQuery, IEnumerable<ShowDto>>
 {
     private readonly IShowRepository _showRepository;
+    private readonly ICacheService _cacheService;
+    private readonly CacheOptions _cacheOptions;
     private readonly IMapper _mapper;
 
-    public GetAllShowsQueryHandler(IShowRepository showRepository, IMapper mapper)
+    public GetAllShowsQueryHandler(IShowRepository showRepository, ICacheService cacheService, IOptions<CacheOptions> cacheOptions, IMapper mapper)
     {
         _showRepository = showRepository;
+        _cacheService = cacheService;
+        _cacheOptions = cacheOptions.Value;
         _mapper = mapper;
     }
 
     public async Task<IEnumerable<ShowDto>> Handle(GetAllShowsQuery request, CancellationToken cancellationToken)
     {
+        if (_cacheOptions.Enabled)
+        {
+            var cached = await _cacheService.GetAsync<IEnumerable<ShowDto>>(CacheKeys.ShowsActive);
+            if (cached != null)
+            {
+                return cached;
+            }
+        }
+
         var shows = await _showRepository.GetActiveAsync();
-        return _mapper.Map<IEnumerable<ShowDto>>(shows);
+        var result = _mapper.Map<IEnumerable<ShowDto>>(shows);
+
+        if (_cacheOptions.Enabled)
+        {
+            var ttl = CacheOptions.ToTimeSpan(_cacheOptions.AllShowsTtlMinutes);
+            await _cacheService.SetAsync(CacheKeys.ShowsActive, result, ttl);
+        }
+
+        return result;
     }
 }
 
@@ -31,17 +55,32 @@ public class GetShowByIdQueryHandler : IRequestHandler<GetShowByIdQuery, ShowDet
 {
     private readonly IShowRepository _showRepository;
     private readonly IReviewRepository _reviewRepository;
+    private readonly ICacheService _cacheService;
+    private readonly CacheOptions _cacheOptions;
     private readonly IMapper _mapper;
 
-    public GetShowByIdQueryHandler(IShowRepository showRepository, IReviewRepository reviewRepository, IMapper mapper)
+    public GetShowByIdQueryHandler(IShowRepository showRepository, IReviewRepository reviewRepository, ICacheService cacheService, IOptions<CacheOptions> cacheOptions, IMapper mapper)
     {
         _showRepository = showRepository;
         _reviewRepository = reviewRepository;
+        _cacheService = cacheService;
+        _cacheOptions = cacheOptions.Value;
         _mapper = mapper;
     }
 
     public async Task<ShowDetailDto> Handle(GetShowByIdQuery request, CancellationToken cancellationToken)
     {
+        var cacheKey = string.Format(CacheKeys.ShowDetail, request.ShowId);
+
+        if (_cacheOptions.Enabled)
+        {
+            var cached = await _cacheService.GetAsync<ShowDetailDto>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+        }
+
         var show = await _showRepository.GetByIdWithDetailsAsync(request.ShowId);
         if (show == null)
             throw new Exception($"Show with id {request.ShowId} not found");
@@ -52,6 +91,12 @@ public class GetShowByIdQueryHandler : IRequestHandler<GetShowByIdQuery, ShowDet
         var dto = _mapper.Map<ShowDetailDto>(show);
         var reviews = await _reviewRepository.GetApprovedByShowIdAsync(request.ShowId);
         dto.Reviews = _mapper.Map<ICollection<ReviewDto>>(reviews);
+
+        if (_cacheOptions.Enabled)
+        {
+            var ttl = CacheOptions.ToTimeSpan(_cacheOptions.ShowDetailTtlMinutes);
+            await _cacheService.SetAsync(cacheKey, dto, ttl);
+        }
 
         return dto;
     }
@@ -82,18 +127,41 @@ public record GetUpcomingShowsQuery(int Days = 30) : IRequest<IEnumerable<ShowDt
 public class GetUpcomingShowsQueryHandler : IRequestHandler<GetUpcomingShowsQuery, IEnumerable<ShowDto>>
 {
     private readonly IShowRepository _showRepository;
+    private readonly ICacheService _cacheService;
+    private readonly CacheOptions _cacheOptions;
     private readonly IMapper _mapper;
 
-    public GetUpcomingShowsQueryHandler(IShowRepository showRepository, IMapper mapper)
+    public GetUpcomingShowsQueryHandler(IShowRepository showRepository, ICacheService cacheService, IOptions<CacheOptions> cacheOptions, IMapper mapper)
     {
         _showRepository = showRepository;
+        _cacheService = cacheService;
+        _cacheOptions = cacheOptions.Value;
         _mapper = mapper;
     }
 
     public async Task<IEnumerable<ShowDto>> Handle(GetUpcomingShowsQuery request, CancellationToken cancellationToken)
     {
+        var cacheKey = string.Format(CacheKeys.ShowsUpcoming, request.Days);
+
+        if (_cacheOptions.Enabled)
+        {
+            var cached = await _cacheService.GetAsync<IEnumerable<ShowDto>>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+        }
+
         var shows = await _showRepository.GetUpcomingAsync(request.Days);
-        return _mapper.Map<IEnumerable<ShowDto>>(shows);
+        var result = _mapper.Map<IEnumerable<ShowDto>>(shows);
+
+        if (_cacheOptions.Enabled)
+        {
+            var ttl = CacheOptions.ToTimeSpan(_cacheOptions.UpcomingShowsTtlMinutes);
+            await _cacheService.SetAsync(cacheKey, result, ttl);
+        }
+
+        return result;
     }
 }
 
@@ -102,17 +170,40 @@ public record GetMostViewedShowsQuery(int Count = 10) : IRequest<IEnumerable<Sho
 public class GetMostViewedShowsQueryHandler : IRequestHandler<GetMostViewedShowsQuery, IEnumerable<ShowDto>>
 {
     private readonly IShowRepository _showRepository;
+    private readonly ICacheService _cacheService;
+    private readonly CacheOptions _cacheOptions;
     private readonly IMapper _mapper;
 
-    public GetMostViewedShowsQueryHandler(IShowRepository showRepository, IMapper mapper)
+    public GetMostViewedShowsQueryHandler(IShowRepository showRepository, ICacheService cacheService, IOptions<CacheOptions> cacheOptions, IMapper mapper)
     {
         _showRepository = showRepository;
+        _cacheService = cacheService;
+        _cacheOptions = cacheOptions.Value;
         _mapper = mapper;
     }
 
     public async Task<IEnumerable<ShowDto>> Handle(GetMostViewedShowsQuery request, CancellationToken cancellationToken)
     {
+        var cacheKey = string.Format(CacheKeys.ShowsTrending, request.Count);
+
+        if (_cacheOptions.Enabled)
+        {
+            var cached = await _cacheService.GetAsync<IEnumerable<ShowDto>>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+        }
+
         var shows = await _showRepository.GetMostViewedAsync(request.Count);
-        return _mapper.Map<IEnumerable<ShowDto>>(shows);
+        var result = _mapper.Map<IEnumerable<ShowDto>>(shows);
+
+        if (_cacheOptions.Enabled)
+        {
+            var ttl = CacheOptions.ToTimeSpan(_cacheOptions.TrendingShowsTtlMinutes);
+            await _cacheService.SetAsync(cacheKey, result, ttl);
+        }
+
+        return result;
     }
 }

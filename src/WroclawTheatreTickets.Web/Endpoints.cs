@@ -9,7 +9,9 @@ using WroclawTheatreTickets.Application.UseCases.Favorites.Commands;
 using WroclawTheatreTickets.Application.UseCases.Reviews.Commands;
 using WroclawTheatreTickets.Application.Contracts.Dtos;
 using WroclawTheatreTickets.Application.Contracts.Repositories;
+using WroclawTheatreTickets.Application.Contracts.Services;
 using System.Security.Claims;
+using System.Text.Json.Serialization;
 
 public static class Endpoints
 {
@@ -98,6 +100,14 @@ public static class Endpoints
 
         adminGroup.MapPost("/reviews/{reviewId}/approve", ApproveReview)
             .WithName("ApproveReview");
+
+        // Health/Monitoring endpoints (public, no rate limiting)
+        var healthGroup = app.MapGroup("/health")
+            .WithName("Health");
+
+        healthGroup.MapGet("/cache", GetCacheHealth)
+            .WithName("GetCacheHealth")
+            .Produces<CacheHealthResponse>();
     }
 
     // Show endpoints
@@ -290,4 +300,58 @@ public static class Endpoints
             return Results.BadRequest(ex.Message);
         }
     }
+
+    // Health endpoints
+    private static IResult GetCacheHealth(ICacheService cacheService)
+    {
+        try
+        {
+            var metrics = cacheService.GetMetrics();
+            var response = new CacheHealthResponse
+            {
+                Status = "Healthy",
+                Timestamp = DateTime.UtcNow,
+                HitRate = metrics.GetHitRate(),
+                TotalHits = metrics.GetTotalHits(),
+                TotalMisses = metrics.GetTotalMisses(),
+                TotalEvictions = metrics.GetTotalEvictions(),
+                TopKeys = metrics.GetTopKeysByHits(5)
+                    .Select(kvp => (object)new { Key = kvp.Key, Hits = kvp.Hits })
+                    .ToList()
+            };
+
+            return Results.Ok(response);
+        }
+        catch
+        {
+            return Results.InternalServerError();
+        }
+    }
+}
+
+/// <summary>
+/// Response DTO for cache health check endpoint.
+/// </summary>
+public class CacheHealthResponse
+{
+    [JsonPropertyName("status")]
+    public string Status { get; set; } = "Healthy";
+
+    [JsonPropertyName("timestamp")]
+    public DateTime Timestamp { get; set; }
+
+    [JsonPropertyName("hitRate")]
+    public double HitRate { get; set; }
+
+    [JsonPropertyName("totalHits")]
+    public long TotalHits { get; set; }
+
+    [JsonPropertyName("totalMisses")]
+    public long TotalMisses { get; set; }
+
+    [JsonPropertyName("totalEvictions")]
+    public long TotalEvictions { get; set; }
+
+    [JsonPropertyName("topKeys")]
+    public List<object> TopKeys { get; set; } = new();
 }

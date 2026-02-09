@@ -1,5 +1,7 @@
 namespace WroclawTheatreTickets.Application.Contracts.Dtos;
 
+using System.Text.Json.Serialization;
+
 /// <summary>
 /// DTOs for parsing API responses from Theatre API
 /// These models match the JSON structure returned by teatrpolski.wroc.pl/api/repertoire
@@ -7,56 +9,103 @@ namespace WroclawTheatreTickets.Application.Contracts.Dtos;
 /// 
 public class RepertoireApiResponse
 {
+    [JsonPropertyName("events")]
     public List<RepertoireEventDto> Events { get; set; } = [];
 }
 
 public class RepertoireEventDto
 {
+    [JsonPropertyName("repertoireEventId")]
     public string RepertoireEventId { get; set; } = string.Empty;
+    
+    [JsonPropertyName("title")]
     public string Title { get; set; } = string.Empty;
+    
+    [JsonPropertyName("date")]
     public DateTime Date { get; set; }
+    
+    [JsonPropertyName("duration")]
     public int Duration { get; set; }
+    
+    [JsonPropertyName("paymentUrl")]
     public string? PaymentUrl { get; set; }
+    
+    [JsonPropertyName("paymentDisabled")]
     public bool PaymentDisabled { get; set; }
+    
+    [JsonPropertyName("hiddenFromRepertoire")]
     public bool HiddenFromRepertoire { get; set; }
+    
+    [JsonPropertyName("additionalProps")]
     public string? AdditionalProps { get; set; }
+    
+    [JsonPropertyName("repertoireCategories")]
     public List<RepertoireCategoryDto> RepertoireCategories { get; set; } = [];
+    
+    [JsonPropertyName("ageCategories")]
     public List<AgeCategoryDto> AgeCategories { get; set; } = [];
+    
+    [JsonPropertyName("showEvent")]
     public ShowEventDto? ShowEvent { get; set; }
+    
+    [JsonPropertyName("stage")]
     public StageDto? Stage { get; set; }
 }
 
 public class RepertoireCategoryDto
 {
+    [JsonPropertyName("categoryId")]
     public string CategoryId { get; set; } = string.Empty;
+    
+    [JsonPropertyName("title")]
     public string Title { get; set; } = string.Empty;
 }
 
 public class AgeCategoryDto
 {
+    [JsonPropertyName("categoryId")]
     public string CategoryId { get; set; } = string.Empty;
+    
+    [JsonPropertyName("title")]
     public string Title { get; set; } = string.Empty;
 }
 
 public class ShowEventDto
 {
+    [JsonPropertyName("showEventId")]
     public string ShowEventId { get; set; } = string.Empty;
+    
+    [JsonPropertyName("slug")]
     public string Slug { get; set; } = string.Empty;
+    
+    [JsonPropertyName("title")]
     public string Title { get; set; } = string.Empty;
+    
+    [JsonPropertyName("shared")]
     public bool Shared { get; set; }
 }
 
 public class StageDto
 {
+    [JsonPropertyName("stageId")]
     public string StageId { get; set; } = string.Empty;
+    
+    [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
+    
+    [JsonPropertyName("buildingId")]
     public string BuildingId { get; set; } = string.Empty;
+    
+    [JsonPropertyName("building")]
     public BuildingDto? Building { get; set; }
 }
 
 public class BuildingDto
 {
+    [JsonPropertyName("buildingId")]
     public string BuildingId { get; set; } = string.Empty;
+    
+    [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 }
 

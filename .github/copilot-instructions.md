@@ -1,6 +1,14 @@
 <!-- Auto-generated guidance for AI coding agents. Keep concise and actionable. -->
 # Copilot / AI Agent Instructions — WroclawTheatreTickets
 
+## Important: Backend Instructions
+
+**Before editing backend code (`src/**`), read** [`.github/instructions/backend.instructions.md`](.github/instructions/backend.instructions.md) **for language-specific conventions.**
+
+Key conventions enforced:
+- Use single-line `using` statements instead of block statements
+- Additional rules documented in the backend instructions file
+
 Repository snapshot (discoverable):
 
 - Solution file at project root: `WroclawTheatreTickets.slnx`

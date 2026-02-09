@@ -34,7 +34,7 @@ public class AuthenticationServiceTests
         // Assert
         Assert.NotNull(hash);
         Assert.NotEqual(password, hash);
-        Assert.True(hash.StartsWith("$2"));  // BCrypt hashes start with $2
+        Assert.StartsWith("$2", hash);  // BCrypt hashes start with $2
     }
 
     [Fact]

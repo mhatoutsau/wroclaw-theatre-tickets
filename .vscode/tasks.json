@@ -1,0 +1,97 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Log User Prompt",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\.scripts\\save_prompt_enhanced.ps1",
+        "-Role",
+        "user",
+        "-Slug",
+        "${input:promptSlug}",
+        "-FromClipboard"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Log Assistant Response",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\.scripts\\save_prompt_enhanced.ps1",
+        "-Role",
+        "assistant",
+        "-Slug",
+        "${input:responseSlug}",
+        "-FromClipboard"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Log User Prompt (Interactive)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\.scripts\\save_prompt_enhanced.ps1",
+        "-Role",
+        "user",
+        "-Slug",
+        "${input:promptSlug}",
+        "-Interactive"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "promptSlug",
+      "type": "promptString",
+      "description": "Enter a short slug for the user prompt (e.g., 'add-feature', 'fix-bug'):",
+      "default": "user-request"
+    },
+    {
+      "id": "responseSlug",
+      "type": "promptString",
+      "description": "Enter a short slug for the assistant response (e.g., 'feature-impl', 'bug-fixed'):",
+      "default": "assistant-response"
+    }
+  ]
+}

@@ -3,11 +3,13 @@ namespace WroclawTheatreTickets.Web;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 using MediatR;
 using WroclawTheatreTickets.Application.Contracts.Repositories;
 using WroclawTheatreTickets.Application.Contracts.Services;
 using WroclawTheatreTickets.Application.Mapping;
+using WroclawTheatreTickets.Application.UseCases.Shows.Commands;
 using WroclawTheatreTickets.Infrastructure.Data;
 using WroclawTheatreTickets.Infrastructure.Repositories;
 using WroclawTheatreTickets.Infrastructure.Services;
@@ -21,8 +23,8 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<TheatreDbContext>(options =>
             options.UseSqlite(configuration.GetConnectionString("DefaultConnection") ?? "Data Source=theatre.db"));
 
-        // MediatR
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining(typeof(ServiceCollectionExtensions)));
+        // MediatR - scan Application assembly for handlers
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<SaveOrUpdateShowCommand>());
 
         // AutoMapper
         services.AddAutoMapper(cfg =>
@@ -45,8 +47,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<ITheatreRepertoireSyncService, TheatreRepertoireSyncService>();
 
-        // FluentValidation
-        services.AddValidatorsFromAssemblyContaining(typeof(ServiceCollectionExtensions));
+        // FluentValidation - scan Application assembly for validators
+        services.AddValidatorsFromAssemblyContaining<SaveOrUpdateShowCommand>();
 
         // CORS
         services.AddCors(options =>
@@ -87,7 +89,46 @@ public static class ServiceCollectionExtensions
 
         // Swagger
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "Wrocław Theatre Tickets API",
+                Version = "v1",
+                Description = "API for managing theatre shows, users, favorites, and reviews in Wrocław",
+                Contact = new OpenApiContact
+                {
+                    Name = "Wrocław Theatre Tickets",
+                    Email = "support@example.com"
+                }
+            });
+
+            // Add JWT Bearer authentication
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\""
+            });
+
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+        });
 
         return services;
     }

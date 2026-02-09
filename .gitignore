@@ -3,4 +3,4 @@
 bin/
 obj/
 /src/WroclawTheatreTickets.Web/logs/*
-/src/WroclawTheatreTickets.Web/theatre.db
+/src/WroclawTheatreTickets.Web/theatre.db*

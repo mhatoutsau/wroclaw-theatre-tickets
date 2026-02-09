@@ -62,7 +62,7 @@ This backend application provides a comprehensive platform for:
 - [x] AutoMapper for DTO mapping
 - [x] CORS support
 - [x] Swagger/OpenAPI documentation
-- [x] **Comprehensive test suite** (~118 tests, 100% passing across all layers)
+- [x] **Comprehensive test suite** (146 tests, 100% passing across all layers)
 - [x] **Distributed caching layer** with IDistributedCache abstraction:
   - In-memory cache backend (Phase 1 - current)
   - Redis-ready architecture (Phase 2 - zero code changes needed)
@@ -117,7 +117,7 @@ dotnet build WroclawTheatreTickets.slnx -c Release
 4. **Run tests (optional but recommended)**
 ```powershell
 dotnet test
-# Expected: 110 tests passed (100% success rate)
+# Expected: 146 tests passed (100% success rate)
 ```
 
 5. **Launch the application**
@@ -476,11 +476,16 @@ WroclawTheatreTickets/
 │   │   │   ├── ReviewRepository.cs
 │   │   │   ├── ViewHistoryRepository.cs
 │   │   │   └── NotificationRepository.cs
+│   │   ├── Configuration/
+│   │   │   └── TheatreApiConfiguration.cs     # Theatre API settings (URL, timeout)
 │   │   ├── Services/                          # Service implementations
 │   │   │   ├── AuthenticationService.cs       # JWT + BCrypt
 │   │   │   ├── EmailService.cs                # SMTP email sender
 │   │   │   ├── NotificationService.cs         # Push notifications stub
-│   │   │   └── TheatreRepertoireSyncService.cs # Theatre data sync
+│   │   │   ├── TeatrPolskiRepertoireDataService.cs # Teatr Polski API fetcher
+│   │   │   ├── TeatrPolskiApiDtoMapper.cs     # Teatr Polski DTO mapper
+│   │   │   ├── TheatreProviderService.cs      # Theatre entity management
+│   │   │   └── TheatreRepertoireSyncService.cs # Theatre sync orchestration
 │   │   └── Jobs/                              # Quartz.NET scheduled jobs
 │   │       ├── SyncTheatreRepertoireJob.cs    # Daily at 2:00 AM
 │   │       └── CleanupOldShowsJob.cs          # Weekly on Sunday 3:00 AM
@@ -504,10 +509,11 @@ WroclawTheatreTickets/
 ├── docs/
 │   ├── BACKEND_SUMMARY.md                    # Complete architecture overview
 │   ├── QUICK_START.md                        # Getting started guide
-│   ├── ARCHITECTURE_DECISIONS.md             # Design rationale document
-│   ├── TEST_COVERAGE.md                      # Test coverage report (110 tests)
+│   ├── ARCHITECTURE_DECISIONS.md             # Design rationale (incl. ADR-015)
+│   ├── TEST_COVERAGE.md                      # Test coverage report (146 tests)
 │   ├── DEPENDENCIES.md                       # Dependency graph & versions
-│   └── SESSION_LOGGING.md                    # AI coding session audit trail
+│   ├── SESSION_LOGGING.md                    # AI coding session audit trail
+│   └── CACHING.md                            # Caching strategy & configuration
 │
 ├── WroclawTheatreTickets.slnx               # Visual Studio solution file
 └── README.md                                 # This file
@@ -688,7 +694,7 @@ builder.AllowOrigins("https://yourfrontend.com")
 
 ## 🧪 Testing
 
-**Current Coverage**: ~118 tests across all layers (100% passing)
+**Current Coverage**: 146 tests across all layers (100% passing)
 
 ### Run All Tests
 ```powershell
@@ -697,31 +703,34 @@ dotnet test
 
 **Expected Output**:
 ```
-Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118, Duration: ~1.5s
+Passed! - Failed: 0, Passed: 146, Skipped: 0, Total: 146, Duration: ~2.6s
 ```
 
 ### Test Breakdown
 
-**Domain Layer** (varies):
+**Domain Layer** (29 tests):
 - User entity creation and validation
 - Show entity lifecycle and business rules
 - User interactions (favorites, reviews, view history)
 - Theatre entity management
 
-**Application Layer** (varies):
+**Application Layer** (23 tests):
 - CQRS command handlers (RegisterUser, FilterShows, AddFavorite, CreateReview)
 - Query handlers with mocked repositories  
 - FluentValidation integration
 - DTO mapping scenarios
 
-**Infrastructure Layer** (varies):
+**Infrastructure Layer** (88 tests):
 - Repository CRUD operations
 - Authentication service (JWT, BCrypt) 
 - Cache service functionality
 - Email service stub
 - Database context configuration
+- **TeatrPolskiRepertoireDataService** (5 tests): API fetching, DTO mapping, event filtering
+- **TheatreProviderService** (4 tests): Theatre lookup/creation, error handling
+- **TheatreRepertoireSyncService** (5 tests): Orchestration, success/error paths
 
-**Web Layer** (varies):
+**Web Layer** (6 tests):
 - Rate limiting configuration tests
 - Endpoint integration tests
 - Middleware tests

@@ -1,0 +1,9 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "dotnet build": true,
+        "/^Move-Item -Path \"d:\\\\Git\\\\WroclawTheatreTickets\\\\README\\.md\" -Destination \"d:\\\\Git\\\\WroclawTheatreTickets\\\\docs\\\\\"; Move-Item -Path \"d:\\\\Git\\\\WroclawTheatreTickets\\\\QUICK_START\\.md\" -Destination \"d:\\\\Git\\\\WroclawTheatreTickets\\\\docs\\\\\"; Move-Item -Path \"d:\\\\Git\\\\WroclawTheatreTickets\\\\BACKEND_SUMMARY\\.md\" -Destination \"d:\\\\Git\\\\WroclawTheatreTickets\\\\docs\\\\\"; Move-Item -Path \"d:\\\\Git\\\\WroclawTheatreTickets\\\\ARCHITECTURE_DECISIONS\\.md\" -Destination \"d:\\\\Git\\\\WroclawTheatreTickets\\\\docs\\\\\"; Move-Item -Path \"d:\\\\Git\\\\WroclawTheatreTickets\\\\DEPENDENCIES\\.md\" -Destination \"d:\\\\Git\\\\WroclawTheatreTickets\\\\docs\\\\\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

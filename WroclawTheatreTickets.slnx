@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WroclawTheatreTickets.Application/WroclawTheatreTickets.Application.csproj" />
+    <Project Path="src/WroclawTheatreTickets.Domain/WroclawTheatreTickets.Domain.csproj" />
+    <Project Path="src/WroclawTheatreTickets.Infrastructure/WroclawTheatreTickets.Infrastructure.csproj" />
+    <Project Path="src/WroclawTheatreTickets.Web/WroclawTheatreTickets.Web.csproj" />
+  </Folder>
+</Solution>

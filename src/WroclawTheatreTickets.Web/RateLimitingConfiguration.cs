@@ -10,77 +10,56 @@ public static class RateLimitingConfiguration
     public const string AuthenticatedEndpointsPolicy = "AuthenticatedEndpoints";
     public const string AdminEndpointsPolicy = "AdminEndpoints";
 
+    // Configuration constants to avoid duplication
+    private const int PublicPermitLimit = 200;
+    private const int AuthenticatedPermitLimit = 50;
+    private const int AdminPermitLimit = 1000;
+    private const int WindowMinutes = 1;
+    private const int PublicQueueLimit = 0;
+    private const int AuthenticatedQueueLimit = 2;
+    private const int AdminQueueLimit = 0;
+
     public static IServiceCollection AddRateLimitingPolicies(this IServiceCollection services)
     {
         services.AddRateLimiter(options =>
         {
-            // Public endpoints: 200 req/min per IP, no queue (fail fast)
-            options.AddFixedWindowLimiter(PublicEndpointsPolicy, opt =>
+            // Public endpoints: Rate limited by IP address
+            options.AddPolicy(PublicEndpointsPolicy, httpContext =>
             {
-                opt.PermitLimit = 200;
-                opt.Window = TimeSpan.FromMinutes(1);
-                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                opt.QueueLimit = 0; // No queueing - fail fast
-            }).RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-
-            // Authenticated endpoints: 50 req/min per user, queue of 2
-            options.AddFixedWindowLimiter(AuthenticatedEndpointsPolicy, opt =>
-            {
-                opt.PermitLimit = 50;
-                opt.Window = TimeSpan.FromMinutes(1);
-                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                opt.QueueLimit = 2; // Allow brief queueing
-            }).RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-
-            // Admin endpoints: 1000 req/min per user
-            options.AddFixedWindowLimiter(AdminEndpointsPolicy, opt =>
-            {
-                opt.PermitLimit = 1000;
-                opt.Window = TimeSpan.FromMinutes(1);
-                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                opt.QueueLimit = 0;
-            }).RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-
-            // Set partition key resolver for all policies
-            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-            {
-                // Determine which policy to use based on the endpoint
-                var endpoint = httpContext.GetEndpoint();
-                var rateLimitPolicy = endpoint?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName;
-
-                if (string.IsNullOrEmpty(rateLimitPolicy))
+                var ipAddress = GetIpAddress(httpContext);
+                return RateLimitPartition.GetFixedWindowLimiter(ipAddress, _ => new FixedWindowRateLimiterOptions
                 {
-                    return RateLimitPartition.GetNoLimiter<string>("NoLimit");
-                }
+                    PermitLimit = PublicPermitLimit,
+                    Window = TimeSpan.FromMinutes(WindowMinutes),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = PublicQueueLimit
+                });
+            });
 
-                // Get partition key based on policy
-                var partitionKey = GetPartitionKey(httpContext, rateLimitPolicy);
-
-                return rateLimitPolicy switch
+            // Authenticated endpoints: Rate limited by user ID
+            options.AddPolicy(AuthenticatedEndpointsPolicy, httpContext =>
+            {
+                var userId = GetUserId(httpContext) ?? GetIpAddress(httpContext);
+                return RateLimitPartition.GetFixedWindowLimiter(userId, _ => new FixedWindowRateLimiterOptions
                 {
-                    PublicEndpointsPolicy => RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = 200,
-                        Window = TimeSpan.FromMinutes(1),
-                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 0
-                    }),
-                    AuthenticatedEndpointsPolicy => RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = 50,
-                        Window = TimeSpan.FromMinutes(1),
-                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 2
-                    }),
-                    AdminEndpointsPolicy => RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = 1000,
-                        Window = TimeSpan.FromMinutes(1),
-                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 0
-                    }),
-                    _ => RateLimitPartition.GetNoLimiter<string>("NoLimit")
-                };
+                    PermitLimit = AuthenticatedPermitLimit,
+                    Window = TimeSpan.FromMinutes(WindowMinutes),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = AuthenticatedQueueLimit
+                });
+            });
+
+            // Admin endpoints: Rate limited by user ID
+            options.AddPolicy(AdminEndpointsPolicy, httpContext =>
+            {
+                var userId = GetUserId(httpContext) ?? GetIpAddress(httpContext);
+                return RateLimitPartition.GetFixedWindowLimiter(userId, _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = AdminPermitLimit,
+                    Window = TimeSpan.FromMinutes(WindowMinutes),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = AdminQueueLimit
+                });
             });
 
             options.OnRejected = async (context, token) =>
@@ -101,17 +80,6 @@ public static class RateLimitingConfiguration
         });
 
         return services;
-    }
-
-    private static string GetPartitionKey(HttpContext httpContext, string policyName)
-    {
-        return policyName switch
-        {
-            PublicEndpointsPolicy => GetIpAddress(httpContext),
-            AuthenticatedEndpointsPolicy => GetUserId(httpContext) ?? GetIpAddress(httpContext),
-            AdminEndpointsPolicy => GetUserId(httpContext) ?? GetIpAddress(httpContext),
-            _ => "unknown"
-        };
     }
 
     private static string GetIpAddress(HttpContext httpContext)

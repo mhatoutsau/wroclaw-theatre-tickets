@@ -5,4 +5,9 @@
     <Project Path="src/WroclawTheatreTickets.Infrastructure/WroclawTheatreTickets.Infrastructure.csproj" />
     <Project Path="src/WroclawTheatreTickets.Web/WroclawTheatreTickets.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WroclawTheatreTickets.Application.Tests/WroclawTheatreTickets.Application.Tests.csproj" />
+    <Project Path="tests/WroclawTheatreTickets.Domain.Tests/WroclawTheatreTickets.Domain.Tests.csproj" />
+    <Project Path="tests/WroclawTheatreTickets.Infrastructure.Tests/WroclawTheatreTickets.Infrastructure.Tests.csproj" />
+  </Folder>
 </Solution>

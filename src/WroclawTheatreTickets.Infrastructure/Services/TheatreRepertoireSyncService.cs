@@ -18,10 +18,6 @@ public class TheatreRepertoireSyncService : ITheatreRepertoireSyncService
     private readonly IMediator _mediator;
     private readonly ILogger<TheatreRepertoireSyncService> _logger;
 
-    private const string TheatreName = "Teatr Polski we Wrocławiu";
-    private const string City = "Wrocław";
-    private const string Address = "Wrocław, Poland";
-
     /// <summary>
     /// Initializes a new instance of the TheatreRepertoireSyncService
     /// </summary>
@@ -48,11 +44,16 @@ public class TheatreRepertoireSyncService : ITheatreRepertoireSyncService
         {
             _logger.LogInformation("Starting theatre repertoire synchronization");
 
+            // Obtain theatre metadata from the data source via interface properties (with fallbacks)
+            var theatreName = _dataService.TheatreName ?? "Unknown Theatre";
+            var city = _dataService.City ?? string.Empty;
+            var address = _dataService.Address ?? string.Empty;
+
             // Get or create the theatre
-            var theatre = await _theatreProvider.GetOrCreateTheatreAsync(TheatreName, City, Address);
+            var theatre = await _theatreProvider.GetOrCreateTheatreAsync(theatreName, city, address);
             if (theatre == null)
             {
-                result.ErrorMessage = $"Failed to get or create theatre: {TheatreName}";
+                result.ErrorMessage = $"Failed to get or create theatre: {theatreName}";
                 _logger.LogError(result.ErrorMessage);
                 return result;
             }

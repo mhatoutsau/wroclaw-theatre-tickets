@@ -1,5 +1,9 @@
 namespace WroclawTheatreTickets.Application.Contracts.Services;
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using WroclawTheatreTickets.Domain.Entities;
 
 /// <summary>
@@ -16,4 +20,9 @@ public interface IRepertoireDataService
     /// <param name="cancellationToken">Cancellation token for async operations</param>
     /// <returns>List of mapped Show entities ready for persistence. Empty list if no valid shows found.</returns>
     Task<List<Show>> FetchAndMapRepertoireAsync(Guid theatreId, CancellationToken cancellationToken);
+
+    // Expose theatre-specific metadata so sync services can obtain name/city/address
+    string TheatreName { get; }
+    string City { get; }
+    string Address { get; }
 }

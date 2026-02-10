@@ -18,6 +18,11 @@ public class TeatrPolskiRepertoireDataService : IRepertoireDataService
     private readonly IOptions<TheatreApiConfiguration> _config;
     private readonly ILogger<TeatrPolskiRepertoireDataService> _logger;
 
+    // Expose theatre-specific metadata
+    public string TheatreName => "Teatr Polski we Wrocławiu";
+    public string City => "Wrocław";
+    public string Address => "Wrocław, Poland";
+
     /// <summary>
     /// Initializes a new instance of TeatrPolskiRepertoireDataService
     /// </summary>

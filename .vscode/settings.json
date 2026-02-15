@@ -9,6 +9,48 @@
         "Rename-Item": true,
         "dotnet clean": true,
         "dotnet restore": true,
-        "Select": true
+        "Select": true,
+        "&": true,
+        "/^& \"C:\\\\Program Files\\\\nodejs\\\\npm\\.cmd\" run build$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^& \"C:\\\\Program Files\\\\nodejs\\\\npm\\.cmd\" run test$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    },
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "[csharp]": {
+        "editor.defaultFormatter": "ms-dotnettools.csharp"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "tailwindCSS.experimental.classRegex": [
+        [
+            "clsx\\(([^)]*)\\)",
+            "(?:'|\"|`)([^']*)(?:'|\"|`)"
+        ]
+    ],
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/bin": true,
+        "**/obj": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/bin": true,
+        "**/obj": true
     }
 }

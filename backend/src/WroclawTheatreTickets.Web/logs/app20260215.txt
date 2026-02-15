@@ -1,0 +1,297 @@
+2026-02-15 13:18:24.700 +01:00 [INF] Executed DbCommand (11ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA journal_mode = 'wal';
+2026-02-15 13:18:24.813 +01:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "Theatres" (
+    "Id" TEXT NOT NULL CONSTRAINT "PK_Theatres" PRIMARY KEY,
+    "Name" TEXT NOT NULL,
+    "Description" TEXT NULL,
+    "Address" TEXT NOT NULL,
+    "City" TEXT NOT NULL DEFAULT 'Wrocław',
+    "PhoneNumber" TEXT NULL,
+    "Email" TEXT NULL,
+    "WebsiteUrl" TEXT NULL,
+    "BookingUrl" TEXT NULL,
+    "Latitude" TEXT NULL,
+    "Longitude" TEXT NULL,
+    "ImageUrl" TEXT NULL,
+    "IsActive" INTEGER NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "UpdatedAt" TEXT NULL
+);
+2026-02-15 13:18:24.813 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "Users" (
+    "Id" TEXT NOT NULL CONSTRAINT "PK_Users" PRIMARY KEY,
+    "Email" TEXT NOT NULL,
+    "FirstName" TEXT NULL,
+    "LastName" TEXT NULL,
+    "PasswordHash" TEXT NULL,
+    "ExternalId" TEXT NULL,
+    "Provider" TEXT NULL,
+    "IsEmailVerified" INTEGER NOT NULL,
+    "LastLoginAt" TEXT NULL,
+    "IsActive" INTEGER NOT NULL,
+    "EnableEmailNotifications" INTEGER NOT NULL,
+    "EnablePushNotifications" INTEGER NOT NULL,
+    "PreferredCategories" TEXT NULL,
+    "Role" INTEGER NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "UpdatedAt" TEXT NULL
+);
+2026-02-15 13:18:24.814 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "Shows" (
+    "Id" TEXT NOT NULL CONSTRAINT "PK_Shows" PRIMARY KEY,
+    "Title" TEXT NOT NULL,
+    "Description" TEXT NULL,
+    "FullDescription" TEXT NULL,
+    "Type" INTEGER NOT NULL,
+    "TheatreId" TEXT NOT NULL,
+    "Director" TEXT NULL,
+    "Cast" TEXT NULL,
+    "StartDateTime" TEXT NOT NULL,
+    "EndDateTime" TEXT NULL,
+    "Duration" TEXT NULL,
+    "Language" TEXT NULL,
+    "MinimumPrice" TEXT NULL,
+    "MaximumPrice" TEXT NULL,
+    "AgeRestriction" INTEGER NOT NULL,
+    "PosterUrl" TEXT NULL,
+    "ImageUrl" TEXT NULL,
+    "TicketUrl" TEXT NULL,
+    "IsActive" INTEGER NOT NULL,
+    "ViewCount" INTEGER NOT NULL,
+    "Rating" REAL NOT NULL,
+    "ReviewCount" INTEGER NOT NULL,
+    "ExternalId" TEXT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "UpdatedAt" TEXT NULL,
+    CONSTRAINT "FK_Shows_Theatres_TheatreId" FOREIGN KEY ("TheatreId") REFERENCES "Theatres" ("Id") ON DELETE CASCADE
+);
+2026-02-15 13:18:24.814 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "Notifications" (
+    "Id" TEXT NOT NULL CONSTRAINT "PK_Notifications" PRIMARY KEY,
+    "UserId" TEXT NOT NULL,
+    "ShowId" TEXT NULL,
+    "Title" TEXT NOT NULL,
+    "Message" TEXT NULL,
+    "Type" INTEGER NOT NULL,
+    "IsRead" INTEGER NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "UpdatedAt" TEXT NULL,
+    CONSTRAINT "FK_Notifications_Shows_ShowId" FOREIGN KEY ("ShowId") REFERENCES "Shows" ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_Notifications_Users_UserId" FOREIGN KEY ("UserId") REFERENCES "Users" ("Id") ON DELETE CASCADE
+);
+2026-02-15 13:18:24.814 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "Reviews" (
+    "Id" TEXT NOT NULL CONSTRAINT "PK_Reviews" PRIMARY KEY,
+    "UserId" TEXT NOT NULL,
+    "ShowId" TEXT NOT NULL,
+    "Rating" INTEGER NOT NULL,
+    "Comment" TEXT NULL,
+    "IsApproved" INTEGER NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "UpdatedAt" TEXT NULL,
+    CONSTRAINT "FK_Reviews_Shows_ShowId" FOREIGN KEY ("ShowId") REFERENCES "Shows" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_Reviews_Users_UserId" FOREIGN KEY ("UserId") REFERENCES "Users" ("Id") ON DELETE CASCADE
+);
+2026-02-15 13:18:24.814 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "UserFavorites" (
+    "Id" TEXT NOT NULL CONSTRAINT "PK_UserFavorites" PRIMARY KEY,
+    "UserId" TEXT NOT NULL,
+    "ShowId" TEXT NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "UpdatedAt" TEXT NULL,
+    CONSTRAINT "FK_UserFavorites_Shows_ShowId" FOREIGN KEY ("ShowId") REFERENCES "Shows" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_UserFavorites_Users_UserId" FOREIGN KEY ("UserId") REFERENCES "Users" ("Id") ON DELETE CASCADE
+);
+2026-02-15 13:18:24.814 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "ViewHistories" (
+    "Id" TEXT NOT NULL CONSTRAINT "PK_ViewHistories" PRIMARY KEY,
+    "UserId" TEXT NOT NULL,
+    "ShowId" TEXT NOT NULL,
+    "ViewedAt" TEXT NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "UpdatedAt" TEXT NULL,
+    CONSTRAINT "FK_ViewHistories_Shows_ShowId" FOREIGN KEY ("ShowId") REFERENCES "Shows" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_ViewHistories_Users_UserId" FOREIGN KEY ("UserId") REFERENCES "Users" ("Id") ON DELETE CASCADE
+);
+2026-02-15 13:18:24.814 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Notifications_CreatedAt" ON "Notifications" ("CreatedAt" DESC);
+2026-02-15 13:18:24.814 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Notifications_ShowId" ON "Notifications" ("ShowId");
+2026-02-15 13:18:24.814 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Notifications_UserId_IsRead" ON "Notifications" ("UserId", "IsRead");
+2026-02-15 13:18:24.814 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Reviews_ShowId_IsApproved" ON "Reviews" ("ShowId", "IsApproved");
+2026-02-15 13:18:24.815 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Reviews_UserId" ON "Reviews" ("UserId");
+2026-02-15 13:18:24.815 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Shows_ExternalId" ON "Shows" ("ExternalId");
+2026-02-15 13:18:24.815 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Shows_IsActive" ON "Shows" ("IsActive");
+2026-02-15 13:18:24.815 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Shows_StartDateTime" ON "Shows" ("StartDateTime");
+2026-02-15 13:18:24.815 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Shows_TheatreId" ON "Shows" ("TheatreId");
+2026-02-15 13:18:24.815 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Shows_Title" ON "Shows" ("Title");
+2026-02-15 13:18:24.815 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Theatres_IsActive" ON "Theatres" ("IsActive");
+2026-02-15 13:18:24.815 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Theatres_Name" ON "Theatres" ("Name");
+2026-02-15 13:18:24.816 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_UserFavorites_ShowId" ON "UserFavorites" ("ShowId");
+2026-02-15 13:18:24.816 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_UserFavorites_UserId_ShowId" ON "UserFavorites" ("UserId", "ShowId");
+2026-02-15 13:18:24.816 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_Users_Email" ON "Users" ("Email");
+2026-02-15 13:18:24.816 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Users_ExternalId_Provider" ON "Users" ("ExternalId", "Provider");
+2026-02-15 13:18:24.816 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_ViewHistories_ShowId" ON "ViewHistories" ("ShowId");
+2026-02-15 13:18:24.816 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_ViewHistories_UserId_ViewedAt" ON "ViewHistories" ("UserId", "ViewedAt" DESC);
+2026-02-15 13:18:24.845 +01:00 [INF] User profile is available. Using 'C:\Users\mgotovtsev\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-02-15 13:18:24.890 +01:00 [INF] Initialized Scheduler Signaller of type: Quartz.Core.SchedulerSignalerImpl
+2026-02-15 13:18:24.890 +01:00 [INF] Quartz Scheduler created
+2026-02-15 13:18:24.891 +01:00 [INF] JobFactory set to: Quartz.Simpl.MicrosoftDependencyInjectionJobFactory
+2026-02-15 13:18:24.891 +01:00 [INF] RAMJobStore initialized.
+2026-02-15 13:18:24.891 +01:00 [INF] Quartz Scheduler 3.13.0.0 - 'QuartzScheduler' with instanceId 'NON_CLUSTERED' initialized
+2026-02-15 13:18:24.892 +01:00 [INF] Using thread pool 'Quartz.Simpl.DefaultThreadPool', size: 10
+2026-02-15 13:18:24.892 +01:00 [INF] Using job store 'Quartz.Simpl.RAMJobStore', supports persistence: False, clustered: False
+2026-02-15 13:18:24.898 +01:00 [INF] Adding 2 jobs, 2 triggers.
+2026-02-15 13:18:24.900 +01:00 [INF] Adding job: DEFAULT.SyncTheatreRepertoireJob
+2026-02-15 13:18:24.908 +01:00 [INF] Adding job: DEFAULT.CleanupOldShowsJob
+2026-02-15 13:18:25.020 +01:00 [INF] Now listening on: https://localhost:50398
+2026-02-15 13:18:25.020 +01:00 [INF] Now listening on: http://localhost:50399
+2026-02-15 13:18:25.021 +01:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-02-15 13:18:25.021 +01:00 [INF] Hosting environment: Development
+2026-02-15 13:18:25.021 +01:00 [INF] Content root path: D:\Git\WroclawTheatreTickets\backend\src\WroclawTheatreTickets.Web
+2026-02-15 13:18:25.023 +01:00 [INF] Scheduler QuartzScheduler_$_NON_CLUSTERED started.
+2026-02-15 13:18:25.293 +01:00 [INF] Request starting HTTP/2 GET https://localhost:50398/ - null null
+2026-02-15 13:18:25.342 +01:00 [INF] Request finished HTTP/2 GET https://localhost:50398/ - 404 0 null 50.8085ms
+2026-02-15 13:18:25.345 +01:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET https://localhost:50398/, Response status code: 404
+2026-02-15 13:18:58.194 +01:00 [INF] Request starting HTTP/1.1 GET https://localhost:50398/api/shows/upcoming?days=30 - null null
+2026-02-15 13:18:58.263 +01:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:18:58 PM'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-02-15 13:18:58.275 +01:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:18:58 PM'.
+2026-02-15 13:18:58.276 +01:00 [INF] Executing endpoint 'HTTP: GET /api/shows/upcoming => GetUpcomingShows'
+2026-02-15 13:18:58.869 +01:00 [INF] Executed DbCommand (7ms) [Parameters=[@from='?' (DbType = DateTime), @to='?' (DbType = DateTime)], CommandType='"Text"', CommandTimeout='30']
+SELECT "s"."Id", "s"."AgeRestriction", "s"."Cast", "s"."CreatedAt", "s"."Description", "s"."Director", "s"."Duration", "s"."EndDateTime", "s"."ExternalId", "s"."FullDescription", "s"."ImageUrl", "s"."IsActive", "s"."Language", "s"."MaximumPrice", "s"."MinimumPrice", "s"."PosterUrl", "s"."Rating", "s"."ReviewCount", "s"."StartDateTime", "s"."TheatreId", "s"."TicketUrl", "s"."Title", "s"."Type", "s"."UpdatedAt", "s"."ViewCount", "t"."Id", "t"."Address", "t"."BookingUrl", "t"."City", "t"."CreatedAt", "t"."Description", "t"."Email", "t"."ImageUrl", "t"."IsActive", "t"."Latitude", "t"."Longitude", "t"."Name", "t"."PhoneNumber", "t"."UpdatedAt", "t"."WebsiteUrl"
+FROM "Shows" AS "s"
+INNER JOIN "Theatres" AS "t" ON "s"."TheatreId" = "t"."Id"
+WHERE "s"."IsActive" AND "s"."StartDateTime" >= @from AND "s"."StartDateTime" <= @to
+ORDER BY "s"."StartDateTime"
+2026-02-15 13:18:58.915 +01:00 [INF] Setting HTTP status code 200.
+2026-02-15 13:18:58.919 +01:00 [INF] Writing value of type 'List`1' as Json.
+2026-02-15 13:18:58.925 +01:00 [INF] Executed endpoint 'HTTP: GET /api/shows/upcoming => GetUpcomingShows'
+2026-02-15 13:18:58.930 +01:00 [INF] Request finished HTTP/1.1 GET https://localhost:50398/api/shows/upcoming?days=30 - 200 null application/json; charset=utf-8 735.6161ms
+2026-02-15 13:18:58.946 +01:00 [INF] Request starting HTTP/1.1 GET https://localhost:50398/api/shows/upcoming?days=30 - null null
+2026-02-15 13:18:58.952 +01:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:18:58 PM'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-02-15 13:18:58.953 +01:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:18:58 PM'.
+2026-02-15 13:18:58.953 +01:00 [INF] Executing endpoint 'HTTP: GET /api/shows/upcoming => GetUpcomingShows'
+2026-02-15 13:18:58.958 +01:00 [INF] Setting HTTP status code 200.
+2026-02-15 13:18:58.959 +01:00 [INF] Writing value of type 'List`1' as Json.
+2026-02-15 13:18:58.959 +01:00 [INF] Executed endpoint 'HTTP: GET /api/shows/upcoming => GetUpcomingShows'
+2026-02-15 13:18:58.960 +01:00 [INF] Request finished HTTP/1.1 GET https://localhost:50398/api/shows/upcoming?days=30 - 200 null application/json; charset=utf-8 13.4632ms
+2026-02-15 13:19:02.766 +01:00 [INF] Request starting HTTP/1.1 GET https://localhost:50398/api/shows - null null
+2026-02-15 13:19:02.767 +01:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:19:02 PM'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-02-15 13:19:02.768 +01:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:19:02 PM'.
+2026-02-15 13:19:02.768 +01:00 [INF] Executing endpoint 'HTTP: GET /api/shows/ => GetAllShows'
+2026-02-15 13:19:02.871 +01:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT "s"."Id", "s"."AgeRestriction", "s"."Cast", "s"."CreatedAt", "s"."Description", "s"."Director", "s"."Duration", "s"."EndDateTime", "s"."ExternalId", "s"."FullDescription", "s"."ImageUrl", "s"."IsActive", "s"."Language", "s"."MaximumPrice", "s"."MinimumPrice", "s"."PosterUrl", "s"."Rating", "s"."ReviewCount", "s"."StartDateTime", "s"."TheatreId", "s"."TicketUrl", "s"."Title", "s"."Type", "s"."UpdatedAt", "s"."ViewCount", "t"."Id", "t"."Address", "t"."BookingUrl", "t"."City", "t"."CreatedAt", "t"."Description", "t"."Email", "t"."ImageUrl", "t"."IsActive", "t"."Latitude", "t"."Longitude", "t"."Name", "t"."PhoneNumber", "t"."UpdatedAt", "t"."WebsiteUrl"
+FROM "Shows" AS "s"
+INNER JOIN "Theatres" AS "t" ON "s"."TheatreId" = "t"."Id"
+WHERE "s"."IsActive"
+2026-02-15 13:19:02.872 +01:00 [INF] Setting HTTP status code 200.
+2026-02-15 13:19:02.873 +01:00 [INF] Writing value of type 'List`1' as Json.
+2026-02-15 13:19:02.873 +01:00 [INF] Executed endpoint 'HTTP: GET /api/shows/ => GetAllShows'
+2026-02-15 13:19:02.873 +01:00 [INF] Request finished HTTP/1.1 GET https://localhost:50398/api/shows - 200 null application/json; charset=utf-8 106.9813ms
+2026-02-15 13:19:02.893 +01:00 [INF] Request starting HTTP/1.1 GET https://localhost:50398/api/shows - null null
+2026-02-15 13:19:02.894 +01:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:19:02 PM'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-02-15 13:19:02.895 +01:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:19:02 PM'.
+2026-02-15 13:19:02.895 +01:00 [INF] Executing endpoint 'HTTP: GET /api/shows/ => GetAllShows'
+2026-02-15 13:19:02.896 +01:00 [INF] Setting HTTP status code 200.
+2026-02-15 13:19:02.896 +01:00 [INF] Writing value of type 'List`1' as Json.
+2026-02-15 13:19:02.896 +01:00 [INF] Executed endpoint 'HTTP: GET /api/shows/ => GetAllShows'
+2026-02-15 13:19:02.897 +01:00 [INF] Request finished HTTP/1.1 GET https://localhost:50398/api/shows - 200 null application/json; charset=utf-8 3.1757ms
+2026-02-15 13:19:03.963 +01:00 [INF] Request starting HTTP/1.1 GET https://localhost:50398/api/shows/upcoming?days=30 - null null
+2026-02-15 13:19:03.964 +01:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:19:03 PM'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-02-15 13:19:03.965 +01:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:19:03 PM'.
+2026-02-15 13:19:03.965 +01:00 [INF] Executing endpoint 'HTTP: GET /api/shows/upcoming => GetUpcomingShows'
+2026-02-15 13:19:03.968 +01:00 [INF] Setting HTTP status code 200.
+2026-02-15 13:19:03.968 +01:00 [INF] Writing value of type 'List`1' as Json.
+2026-02-15 13:19:03.969 +01:00 [INF] Executed endpoint 'HTTP: GET /api/shows/upcoming => GetUpcomingShows'
+2026-02-15 13:19:03.969 +01:00 [INF] Request finished HTTP/1.1 GET https://localhost:50398/api/shows/upcoming?days=30 - 200 null application/json; charset=utf-8 5.4264ms
+2026-02-15 13:19:03.991 +01:00 [INF] Request starting HTTP/1.1 GET https://localhost:50398/api/shows/upcoming?days=30 - null null
+2026-02-15 13:19:03.991 +01:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:19:03 PM'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-02-15 13:19:03.992 +01:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:19:03 PM'.
+2026-02-15 13:19:03.992 +01:00 [INF] Executing endpoint 'HTTP: GET /api/shows/upcoming => GetUpcomingShows'
+2026-02-15 13:19:03.992 +01:00 [INF] Setting HTTP status code 200.
+2026-02-15 13:19:03.992 +01:00 [INF] Writing value of type 'List`1' as Json.
+2026-02-15 13:19:03.992 +01:00 [INF] Executed endpoint 'HTTP: GET /api/shows/upcoming => GetUpcomingShows'
+2026-02-15 13:19:03.993 +01:00 [INF] Request finished HTTP/1.1 GET https://localhost:50398/api/shows/upcoming?days=30 - 200 null application/json; charset=utf-8 2.0118ms
+2026-02-15 13:19:05.822 +01:00 [INF] Request starting HTTP/1.1 GET https://localhost:50398/api/favorites - null null
+2026-02-15 13:19:05.825 +01:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:19:05 PM'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-02-15 13:19:05.825 +01:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:19:05 PM'.
+2026-02-15 13:19:05.830 +01:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-02-15 13:19:05.835 +01:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-02-15 13:19:05.835 +01:00 [INF] Request finished HTTP/1.1 GET https://localhost:50398/api/favorites - 401 0 null 13.4774ms
+2026-02-15 13:19:05.853 +01:00 [INF] Request starting HTTP/1.1 GET https://localhost:50398/api/favorites - null null
+2026-02-15 13:19:05.853 +01:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:19:05 PM'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-02-15 13:19:05.854 +01:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '2/15/2026 12:14:37 PM', Current time (UTC): '2/15/2026 12:19:05 PM'.
+2026-02-15 13:19:05.856 +01:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-02-15 13:19:05.856 +01:00 [INF] AuthenticationScheme: Bearer was challenged.
+2026-02-15 13:19:05.857 +01:00 [INF] Request finished HTTP/1.1 GET https://localhost:50398/api/favorites - 401 0 null 3.8596ms
+2026-02-15 13:19:14.091 +01:00 [INF] Request starting HTTP/1.1 GET https://localhost:50398/api/shows/upcoming?days=30 - null null
+2026-02-15 13:19:14.092 +01:00 [INF] Executing endpoint 'HTTP: GET /api/shows/upcoming => GetUpcomingShows'
+2026-02-15 13:19:14.092 +01:00 [INF] Setting HTTP status code 200.
+2026-02-15 13:19:14.092 +01:00 [INF] Writing value of type 'List`1' as Json.
+2026-02-15 13:19:14.092 +01:00 [INF] Executed endpoint 'HTTP: GET /api/shows/upcoming => GetUpcomingShows'
+2026-02-15 13:19:14.093 +01:00 [INF] Request finished HTTP/1.1 GET https://localhost:50398/api/shows/upcoming?days=30 - 200 null application/json; charset=utf-8 1.1945ms
+2026-02-15 13:19:14.113 +01:00 [INF] Request starting HTTP/1.1 GET https://localhost:50398/api/shows/upcoming?days=30 - null null
+2026-02-15 13:19:14.113 +01:00 [INF] Executing endpoint 'HTTP: GET /api/shows/upcoming => GetUpcomingShows'
+2026-02-15 13:19:14.114 +01:00 [INF] Setting HTTP status code 200.
+2026-02-15 13:19:14.114 +01:00 [INF] Writing value of type 'List`1' as Json.
+2026-02-15 13:19:14.114 +01:00 [INF] Executed endpoint 'HTTP: GET /api/shows/upcoming => GetUpcomingShows'
+2026-02-15 13:19:14.114 +01:00 [INF] Request finished HTTP/1.1 GET https://localhost:50398/api/shows/upcoming?days=30 - 200 null application/json; charset=utf-8 1.2139ms

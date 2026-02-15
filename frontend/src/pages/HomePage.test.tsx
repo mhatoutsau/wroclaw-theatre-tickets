@@ -12,6 +12,8 @@ vi.mock("../api/client", () => ({
   apiClient: {
     getUpcomingShows: vi.fn(),
     getToken: vi.fn(() => null),
+    clearToken: vi.fn(),
+    setToken: vi.fn(),
   },
 }));
 

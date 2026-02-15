@@ -1,21 +1,21 @@
-import { useState, useEffect } from 'react';
-import { ShowCard } from '../components/ShowCard';
-import { apiClient } from '../api/client';
-import { ShowDto, ShowFilterCriteria } from '../types/api';
-import { Loader2, Search } from 'lucide-react';
+import { useState, useEffect, useCallback } from "react";
+import { ShowCard } from "../components/ShowCard";
+import { apiClient } from "../api/client";
+import { ShowDto, ShowFilterCriteria } from "../types/api";
+import { Loader2, Search } from "lucide-react";
 
 export function ShowAllPage() {
   const [shows, setShows] = useState<ShowDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<ShowFilterCriteria>({});
 
-  const loadShows = async () => {
+  const loadShows = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       if (searchQuery) {
         const data = await apiClient.searchShows(searchQuery);
         setShows(data);
@@ -27,23 +27,26 @@ export function ShowAllPage() {
         setShows(data);
       }
     } catch (err) {
-      setError('Failed to load shows. Please try again later.');
-      console.error('Error loading shows:', err);
+      setError("Failed to load shows. Please try again later.");
+      console.error("Error loading shows:", err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filters, searchQuery]);
 
   useEffect(() => {
     loadShows();
-  }, []);
+  }, [loadShows]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     loadShows();
   };
 
-  const handleFilterChange = (key: keyof ShowFilterCriteria, value: string | number) => {
+  const handleFilterChange = (
+    key: keyof ShowFilterCriteria,
+    value: string | number,
+  ) => {
     setFilters((prev) => ({
       ...prev,
       [key]: value || undefined,
@@ -56,7 +59,7 @@ export function ShowAllPage() {
 
   const clearFilters = () => {
     setFilters({});
-    setSearchQuery('');
+    setSearchQuery("");
     loadShows();
   };
 
@@ -95,38 +98,50 @@ export function ShowAllPage() {
               <label className="block text-sm font-medium mb-1">Type</label>
               <input
                 type="text"
-                value={filters.type || ''}
-                onChange={(e) => handleFilterChange('type', e.target.value)}
+                value={filters.type || ""}
+                onChange={(e) => handleFilterChange("type", e.target.value)}
                 placeholder="e.g., Opera, Ballet"
                 className="input-field"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Min Price (PLN)</label>
+              <label className="block text-sm font-medium mb-1">
+                Min Price (PLN)
+              </label>
               <input
                 type="number"
-                value={filters.minPrice || ''}
-                onChange={(e) => handleFilterChange('minPrice', Number(e.target.value))}
+                value={filters.minPrice || ""}
+                onChange={(e) =>
+                  handleFilterChange("minPrice", Number(e.target.value))
+                }
                 placeholder="0"
                 className="input-field"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Max Price (PLN)</label>
+              <label className="block text-sm font-medium mb-1">
+                Max Price (PLN)
+              </label>
               <input
                 type="number"
-                value={filters.maxPrice || ''}
-                onChange={(e) => handleFilterChange('maxPrice', Number(e.target.value))}
+                value={filters.maxPrice || ""}
+                onChange={(e) =>
+                  handleFilterChange("maxPrice", Number(e.target.value))
+                }
                 placeholder="1000"
                 className="input-field"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Start Date</label>
+              <label className="block text-sm font-medium mb-1">
+                Start Date
+              </label>
               <input
                 type="date"
-                value={filters.startDate || ''}
-                onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                value={filters.startDate || ""}
+                onChange={(e) =>
+                  handleFilterChange("startDate", e.target.value)
+                }
                 className="input-field"
               />
             </div>
@@ -134,16 +149,20 @@ export function ShowAllPage() {
               <label className="block text-sm font-medium mb-1">End Date</label>
               <input
                 type="date"
-                value={filters.endDate || ''}
-                onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                value={filters.endDate || ""}
+                onChange={(e) => handleFilterChange("endDate", e.target.value)}
                 className="input-field"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Age Restriction</label>
+              <label className="block text-sm font-medium mb-1">
+                Age Restriction
+              </label>
               <select
-                value={filters.ageRestriction || ''}
-                onChange={(e) => handleFilterChange('ageRestriction', e.target.value)}
+                value={filters.ageRestriction || ""}
+                onChange={(e) =>
+                  handleFilterChange("ageRestriction", e.target.value)
+                }
                 className="input-field"
               >
                 <option value="">All ages</option>
@@ -179,7 +198,9 @@ export function ShowAllPage() {
         </div>
       ) : shows.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-600 dark:text-gray-400">No shows found matching your criteria.</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            No shows found matching your criteria.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

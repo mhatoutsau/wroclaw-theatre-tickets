@@ -55,8 +55,8 @@ class ApiClient {
           console.warn(
             "Unauthorized (401) - clearing token and redirecting to login",
           );
-          //this.clearToken();
-          //window.location.href = "/login";
+          this.clearToken();
+          window.location.href = "/login";
         }
         return Promise.reject(error);
       },

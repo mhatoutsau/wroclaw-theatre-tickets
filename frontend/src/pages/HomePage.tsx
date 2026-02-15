@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { ShowCard } from '../components/ShowCard';
-import { apiClient } from '../api/client';
-import { ShowDto } from '../types/api';
-import { Loader2 } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { ShowCard } from "../components/ShowCard";
+import { apiClient } from "../api/client";
+import { ShowDto } from "../types/api";
+import { Loader2 } from "lucide-react";
 
 export function HomePage() {
   const [shows, setShows] = useState<ShowDto[]>([]);
@@ -16,8 +16,8 @@ export function HomePage() {
       const data = await apiClient.getUpcomingShows(30);
       setShows(data);
     } catch (err) {
-      setError('Failed to load shows. Please try again later.');
-      console.error('Error loading shows:', err);
+      setError("Failed to load shows. Please try again later.");
+      console.error("Error loading shows:", err);
     } finally {
       setIsLoading(false);
     }
@@ -30,7 +30,12 @@ export function HomePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-primary-600" size={48} />
+        <Loader2
+          className="animate-spin text-primary-600"
+          size={48}
+          role="progressbar"
+          aria-label="Loading"
+        />
       </div>
     );
   }
@@ -57,7 +62,9 @@ export function HomePage() {
 
       {shows.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-600 dark:text-gray-400">No shows available at the moment.</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            No shows available at the moment.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

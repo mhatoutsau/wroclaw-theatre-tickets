@@ -1,10 +1,12 @@
-# Wrocław Theatre Tickets - Backend
+# Wrocław Theatre Tickets
 
-A production-ready .NET 10 Clean Architecture REST API for aggregating and managing theatre events in Wrocław with search, filtering, user accounts, reviews, and automated synchronization.
+A full-stack application for aggregating and managing theatre events in Wrocław, Poland. Built with .NET 10 Clean Architecture backend and React TypeScript frontend.
 
-## 🎯 Project Overview
+## 🎭 Project Overview
 
-This backend application provides a comprehensive platform for:
+This application provides a comprehensive platform for discovering and booking theatre performances in Wrocław:
+
+**Backend:**
 - **Automated theater event aggregation** from multiple Wrocław theatres using scheduled jobs
 - **Advanced search and filtering** by type, date, price, age restriction, language, and theatre
 - **Secure user management** with JWT authentication and OAuth framework (Google, Facebook)
@@ -13,6 +15,39 @@ This backend application provides a comprehensive platform for:
 - **Admin moderation panel** for review approval and content management
 - **Automated maintenance** with scheduled cleanup jobs and data synchronization
 - **Performance optimization** with distributed caching and rate limiting
+
+**Frontend:**
+- **React 18 with TypeScript** for type-safe, modern UI
+- **Tailwind CSS** for responsive, accessible design
+- **Theme system** with light, dark, and auto (system) modes
+- **User authentication** with email/password and secure JWT tokens
+- **Interactive show browsing** with two-column layout and filtering
+- **Favorites management** with star icons and dedicated page
+- **Role-based access** for users, moderators, and administrators
+
+## 📁 Project Structure
+
+```
+WroclawTheatreTickets/
+├── client/                    # React TypeScript frontend
+│   ├── src/
+│   │   ├── api/              # API client
+│   │   ├── components/       # Reusable UI components
+│   │   ├── contexts/         # React contexts (Auth, Theme)
+│   │   ├── pages/            # Page components
+│   │   └── types/            # TypeScript definitions
+│   └── README.md             # Frontend documentation
+│
+├── src/                      # Backend source code
+│   ├── WroclawTheatreTickets.Domain/
+│   ├── WroclawTheatreTickets.Application/
+│   ├── WroclawTheatreTickets.Infrastructure/
+│   └── WroclawTheatreTickets.Web/
+│
+├── tests/                    # Unit and integration tests
+├── docs/                     # Documentation
+└── README.md                 # This file
+```
 
 ## 🏗️ Architecture
 
@@ -93,11 +128,12 @@ This backend application provides a comprehensive platform for:
 
 ### Prerequisites
 - **.NET 10 SDK** or later ([Download](https://dotnet.microsoft.com/download/dotnet/10.0))
+- **Node.js 18+** for frontend ([Download](https://nodejs.org/))
 - **IDE**: Visual Studio 2025, VS Code, or JetBrains Rider
 - **SQLite** (included with .NET, no separate install needed)
 - **PowerShell** (for Windows) or Bash (for Linux/macOS)
 
-### Installation Steps
+### Backend Installation
 
 1. **Clone and navigate to repository**
 ```powershell
@@ -120,7 +156,7 @@ dotnet test
 # Expected: 146 tests passed (100% success rate)
 ```
 
-5. **Launch the application**
+5. **Launch the backend API**
 ```powershell
 cd src\WroclawTheatreTickets.Web
 dotnet run
@@ -132,7 +168,43 @@ dotnet run --force-sync
 ```
 
 6. **Access the API**
-- **API Base URL**: `https://localhost:5001/api`
+- **API Base URL**: `https://localhost:5001/api` or `http://localhost:5000/api`
+- **Swagger UI**: `https://localhost:5001/swagger`
+
+### Frontend Installation
+
+1. **Navigate to client folder**
+```powershell
+cd client
+```
+
+2. **Install dependencies**
+```powershell
+npm install
+```
+
+3. **Start development server**
+```powershell
+npm run dev
+```
+
+The frontend will be available at `http://localhost:5173`
+
+4. **Build for production (optional)**
+```powershell
+npm run build
+npm run preview
+```
+
+### First Steps
+
+1. Open `http://localhost:5173` in your browser
+2. Click **Sign Up** to create an account (email + strong password)
+3. Browse **upcoming shows** on the home page
+4. Use **Show All** page for advanced filtering
+5. Click the **star icon** to add shows to favorites
+6. Try the **theme switcher** in the header (light/dark/auto)
+7. Admin users: Access the **Admin Dashboard** from the sidebar
 - **Swagger UI**: `https://localhost:5001/swagger` (Development only)
 - **Health Check**: `https://localhost:5001/api/shows`
 

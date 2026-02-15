@@ -2,6 +2,82 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "build-backend",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/WroclawTheatreTickets.slnx",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    },
+    {
+      "label": "run-backend",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/src/WroclawTheatreTickets.Web/WroclawTheatreTickets.Web.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "run-frontend",
+      "type": "npm",
+      "script": "dev",
+      "path": "client/",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "build"
+    },
+    {
+      "label": "test-backend",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "test",
+        "${workspaceFolder}/WroclawTheatreTickets.slnx"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "test"
+    },
+    {
+      "label": "test-frontend",
+      "type": "npm",
+      "script": "test",
+      "path": "client/",
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "install-frontend-deps",
+      "type": "npm",
+      "script": "install",
+      "path": "client/",
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "build-frontend",
+      "type": "npm",
+      "script": "build",
+      "path": "client/",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
       "label": "Log User Prompt",
       "type": "shell",
       "command": "powershell",

@@ -110,6 +110,20 @@ npm test
 
 Coverage details and current status are documented in [docs/TEST_COVERAGE.md](docs/TEST_COVERAGE.md).
 
+## Suggested Improvements
+
+- Add end-to-end API tests for key endpoints (auth, shows, favorites) to catch integration regressions.
+- Introduce production database migrations (PostgreSQL/SQL Server) and document the switch.
+- Add Redis caching for high-traffic queries and trending results.
+- Expand observability with OpenTelemetry traces plus structured metrics dashboards.
+- Harden auth with refresh tokens, rate-limited auth endpoints, and stricter CORS policies.
+
+## Milestones (Suggested)
+
+- **Milestone 1**: API coverage and auth hardening.
+- **Milestone 2**: Caching plus observability baseline.
+- **Milestone 3**: Production database migration and operational docs.
+
 ## Documentation
 
 - Backend overview: [docs/BACKEND_SUMMARY.md](docs/BACKEND_SUMMARY.md)

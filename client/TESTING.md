@@ -65,7 +65,7 @@ describe('MyComponent', () => {
         <MyComponent />
       </BrowserRouter>
     )
-    
+
     expect(screen.getByText('Expected Text')).toBeInTheDocument()
   })
 })
@@ -76,20 +76,20 @@ describe('MyComponent', () => {
 Test contexts using `renderHook`:
 
 ```typescript
-import { renderHook, act } from '@testing-library/react'
-import { ThemeProvider, useTheme } from './ThemeContext'
+import { renderHook, act } from "@testing-library/react";
+import { ThemeProvider, useTheme } from "./ThemeContext";
 
-it('changes theme', () => {
+it("changes theme", () => {
   const { result } = renderHook(() => useTheme(), {
     wrapper: ThemeProvider,
-  })
+  });
 
   act(() => {
-    result.current.setTheme('dark')
-  })
+    result.current.setTheme("dark");
+  });
 
-  expect(result.current.theme).toBe('dark')
-})
+  expect(result.current.theme).toBe("dark");
+});
 ```
 
 ### Testing with Auth and Theme
@@ -118,18 +118,18 @@ renderWithProviders(<MyComponent />)
 Mock the API client using Vitest:
 
 ```typescript
-import { vi } from 'vitest'
-import * as apiClient from '../api/client'
+import { vi } from "vitest";
+import * as apiClient from "../api/client";
 
-vi.mock('../api/client', () => ({
+vi.mock("../api/client", () => ({
   apiClient: {
     getUpcomingShows: vi.fn(),
     addFavorite: vi.fn(),
   },
-}))
+}));
 
 // In your test
-vi.mocked(apiClient.apiClient.getUpcomingShows).mockResolvedValue(mockShows)
+vi.mocked(apiClient.apiClient.getUpcomingShows).mockResolvedValue(mockShows);
 ```
 
 ## Test Coverage Goals

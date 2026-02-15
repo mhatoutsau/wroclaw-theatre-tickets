@@ -7,12 +7,17 @@ import { ThemeProvider } from "../contexts/ThemeContext";
 import { mockShow } from "../test/mockData";
 import * as apiClient from "../api/client";
 
+const validToken =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL25hbWVpZGVudGlmaWVyIjoiMTIzIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjoidGVzdEBleGFtcGxlLmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIifQ.test";
+
 // Mock the API client
 vi.mock("../api/client", () => ({
   apiClient: {
     addFavorite: vi.fn(),
     removeFavorite: vi.fn(),
-    getToken: vi.fn(() => "mock-token"),
+    getToken: vi.fn(() => validToken),
+    clearToken: vi.fn(),
+    setToken: vi.fn(),
   },
 }));
 
@@ -99,7 +104,7 @@ describe("ShowCard", () => {
     renderWithProviders(<ShowCard show={mockShow} />);
 
     // Date should be formatted using date-fns
-    expect(screen.getByText(/March 15, 2026/i)).toBeInTheDocument();
+    expect(screen.getByText(/Mar 15, 2026/i)).toBeInTheDocument();
   });
 });
 

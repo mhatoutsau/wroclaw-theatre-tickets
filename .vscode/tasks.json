@@ -7,7 +7,7 @@
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/WroclawTheatreTickets.slnx",
+        "${workspaceFolder}/backend/WroclawTheatreTickets.slnx",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
       ],
@@ -21,7 +21,7 @@
       "args": [
         "run",
         "--project",
-        "${workspaceFolder}/src/WroclawTheatreTickets.Web/WroclawTheatreTickets.Web.csproj"
+        "${workspaceFolder}/backend/src/WroclawTheatreTickets.Web/WroclawTheatreTickets.Web.csproj"
       ],
       "problemMatcher": "$msCompile",
       "group": "build",
@@ -48,7 +48,7 @@
       "type": "process",
       "args": [
         "test",
-        "${workspaceFolder}/WroclawTheatreTickets.slnx"
+        "${workspaceFolder}/backend/WroclawTheatreTickets.slnx"
       ],
       "problemMatcher": "$msCompile",
       "group": "test"

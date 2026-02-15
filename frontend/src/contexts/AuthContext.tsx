@@ -67,52 +67,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (credentials: UserLoginRequest) => {
-    try {
-      const response: AuthenticationResponse =
-        await apiClient.login(credentials);
-      apiClient.setToken(response.accessToken);
+    const response: AuthenticationResponse = await apiClient.login(credentials);
+    apiClient.setToken(response.accessToken);
 
-      // Decode JWT to get user info
-      const payload = JSON.parse(atob(response.accessToken.split(".")[1]));
-      const role =
-        payload[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ] ||
-        payload.role ||
-        "User";
+    // Decode JWT to get user info
+    const payload = JSON.parse(atob(response.accessToken.split(".")[1]));
+    const role =
+      payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
+      payload.role ||
+      "User";
 
-      setUser({
-        id: response.userId,
-        email: response.email,
-        role: role as "User" | "Moderator" | "Admin",
-      });
-    } catch (error) {
-      throw error;
-    }
+    setUser({
+      id: response.userId,
+      email: response.email,
+      role: role as "User" | "Moderator" | "Admin",
+    });
   };
 
   const register = async (data: UserRegistrationRequest) => {
-    try {
-      const response: AuthenticationResponse = await apiClient.register(data);
-      apiClient.setToken(response.accessToken);
+    const response: AuthenticationResponse = await apiClient.register(data);
+    apiClient.setToken(response.accessToken);
 
-      // Decode JWT to get user info
-      const payload = JSON.parse(atob(response.accessToken.split(".")[1]));
-      const role =
-        payload[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ] ||
-        payload.role ||
-        "User";
+    // Decode JWT to get user info
+    const payload = JSON.parse(atob(response.accessToken.split(".")[1]));
+    const role =
+      payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
+      payload.role ||
+      "User";
 
-      setUser({
-        id: response.userId,
-        email: response.email,
-        role: role as "User" | "Moderator" | "Admin",
-      });
-    } catch (error) {
-      throw error;
-    }
+    setUser({
+      id: response.userId,
+      email: response.email,
+      role: role as "User" | "Moderator" | "Admin",
+    });
   };
 
   const logout = () => {
@@ -141,6 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

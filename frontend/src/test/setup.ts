@@ -22,13 +22,29 @@ Object.defineProperty(window, "matchMedia", {
   }),
 });
 
-// Mock localStorage
+// Mock localStorage with in-memory storage behavior
+const storage = new Map<string, string>();
+
 const localStorageMock: Storage = {
-  length: 0,
-  clear: () => {},
-  getItem: () => null,
-  key: () => null,
-  removeItem: () => {},
-  setItem: () => {},
+  get length() {
+    return storage.size;
+  },
+  clear: () => {
+    storage.clear();
+  },
+  getItem: (key: string) => {
+    return storage.has(key) ? (storage.get(key) ?? null) : null;
+  },
+  key: (index: number) => {
+    const keys = Array.from(storage.keys());
+    return keys[index] ?? null;
+  },
+  removeItem: (key: string) => {
+    storage.delete(key);
+  },
+  setItem: (key: string, value: string) => {
+    storage.set(key, value);
+  },
 };
+
 globalThis.localStorage = localStorageMock;

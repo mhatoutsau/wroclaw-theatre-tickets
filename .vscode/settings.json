@@ -18,7 +18,10 @@
         "/^& \"C:\\\\Program Files\\\\nodejs\\\\npm\\.cmd\" run test$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "Set-ExecutionPolicy": true,
+        "npm run lint": true,
+        "npm install": true
     },
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {

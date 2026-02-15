@@ -1,10 +1,11 @@
 ---
-applyTo: "src/**"
+applyTo: "backend/**"
 ---
 
 # Backend Instructions
 
 Use 'using' single line statement instead of block statement.
+
 ```csharp
 // Bad
 using (var stream = new FileStream("file.txt", FileMode.Open))

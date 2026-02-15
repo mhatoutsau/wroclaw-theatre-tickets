@@ -1,5 +1,5 @@
 .vs/
 bin/
 obj/
-/src/WroclawTheatreTickets.Web/logs/*
-/src/WroclawTheatreTickets.Web/theatre.db*
+backend/src/WroclawTheatreTickets.Web/logs/*
+backend/src/WroclawTheatreTickets.Web/theatre.db*
